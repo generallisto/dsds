@@ -1,23 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // ========== КОНСТАНТЫ И НАСТРОЙКИ ==========
+    // ========== НАСТРОЙКИ ИГРЫ ==========
     const GAME = {
-        canvasWidth: 600,
-        canvasHeight: 150,
-        groundHeight: 10,
-        groundY: 140,
-        playerStartX: 50,
-        playerWidth: 40,
-        playerHeight: 40,
-        playerJumpForce: 12,
-        gravity: 0.6,
-        initialSpeed: 5,
-        speedIncrease: 0.001,
-        cactusWidth: 20,
-        minCactusHeight: 30,
-        maxCactusHeight: 50,
-        minCactusGap: 200,
-        maxCactusGap: 400,
-        cloudCount: 3
+        playerWidth: 120,           // Очень большой размер для 1920x1080
+        playerHeight: 120,          // Очень большой размер
+        playerJumpForce: 18,        // Высокий прыжок
+        gravity: 0.9,
+        initialSpeed: 10,
+        speedIncrease: 0.0003,
+        cactusWidth: 40,           // Большие кактусы
+        minCactusHeight: 70,
+        maxCactusHeight: 120,
+        minCactusGap: 350,
+        maxCactusGap: 550,
+        groundHeight: 30,
+        cloudCount: 5
     };
 
     // ========== ПЕРЕМЕННЫЕ ИГРЫ ==========
@@ -25,21 +21,25 @@ document.addEventListener('DOMContentLoaded', function() {
     let gameRunning = false;
     let gameSpeed = GAME.initialSpeed;
     let score = 0;
-    let highScore = localStorage.getItem('dinoHighScore') || 0;
+    let highScore = parseInt(localStorage.getItem('dinoHighScore')) || 0;
     let frames = 0;
+    let fps = 60;
+    let lastFpsUpdate = 0;
+    let fpsFrameCount = 0;
     let gameLoopId = null;
     let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     // ========== ИГРОВЫЕ ОБЪЕКТЫ ==========
     let player = {
-        x: GAME.playerStartX,
-        y: GAME.groundY - GAME.playerHeight,
+        x: 200,
+        y: 0,
         width: GAME.playerWidth,
         height: GAME.playerHeight,
         velocityY: 0,
         isJumping: false,
         isDucking: false,
-        duckHeight: 25
+        duckHeight: GAME.playerHeight * 0.6,
+        groundY: 0
     };
     
     let obstacles = [];
@@ -50,66 +50,86 @@ document.addEventListener('DOMContentLoaded', function() {
     let cactusImg = new Image();
     
     // ========== DOM ЭЛЕМЕНТЫ ==========
-    let scoreElement, highScoreElement, speedElement;
-    let startBtn, jumpBtn, resetBtn, restartBtn;
+    let scoreElement, highScoreElement, fpsElement;
+    let jumpBtn, restartBtn, startBtn;
     let gameOverScreen, finalScoreElement;
-    let canvasContainer;
+    let startScreen;
 
-    // ========== ИНИЦИАЛИЗАЦИЯ ИГРЫ ==========
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
     function init() {
-        // Получаем элементы DOM
+        console.log("🚀 Инициализация игры...");
+        
+        // Получаем элементы
         canvas = document.getElementById('gameCanvas');
         ctx = canvas.getContext('2d');
         
         scoreElement = document.getElementById('score');
         highScoreElement = document.getElementById('highScore');
-        speedElement = document.getElementById('speed');
-        startBtn = document.getElementById('startBtn');
-        jumpBtn = document.getElementById('jumpBtn');
-        resetBtn = document.getElementById('resetBtn');
-        restartBtn = document.getElementById('restartBtn');
-        gameOverScreen = document.getElementById('gameOver');
-        finalScoreElement = document.getElementById('finalScore');
-        canvasContainer = document.querySelector('.game-area');
+        fpsElement = document.getElementById('fps');
+        jumpBtn = document.querySelector('.mobile-jump-btn');
+        restartBtn = document.querySelector('.game-over button');
+        startBtn = document.querySelector('.start-screen button');
+        gameOverScreen = document.querySelector('.game-over');
+        finalScoreElement = gameOverScreen.querySelector('p span');
+        startScreen = document.querySelector('.start-screen');
         
-        // Настраиваем канвас
-        canvas.width = GAME.canvasWidth;
-        canvas.height = GAME.canvasHeight;
+        // Устанавливаем размеры канваса
+        resizeCanvas();
         
         // Загружаем картинку игрока
         playerImg.src = 'images/othcim.jpg';
+        playerImg.crossOrigin = "anonymous";
+        playerImg.onload = function() {
+            console.log("✅ Картинка игрока загружена");
+            createCactusImage();
+            startGameAfterLoad();
+        };
         playerImg.onerror = function() {
-            console.log("Изображение не найдено. Создаю стандартного динозаврика...");
+            console.log("❌ Картинка не найдена, создаю динозаврика...");
             createDefaultPlayerImage();
+            createCactusImage();
+            startGameAfterLoad();
         };
         
-        // Создаем изображения
-        createCactusImage();
+        // Настраиваем управление
+        setupControls();
+        
+        // Создаем облака
         createClouds();
         
-        // Устанавливаем начальные значения
-        highScoreElement.textContent = highScore;
-        speedElement.textContent = gameSpeed.toFixed(1) + 'x';
+        // Обновляем рекорд
+        updateHighScore();
         
-        // Настраиваем мобильное управление
-        if (isMobile) {
-            jumpBtn.style.display = 'block';
-            jumpBtn.classList.add('jump-effect');
+        // Показываем стартовый экран на ПК
+        if (!isMobile) {
+            startScreen.style.display = 'flex';
         }
         
-        // Назначаем обработчики событий
-        setupEventListeners();
+        console.log("🎮 Игра готова!");
+    }
+
+    function startGameAfterLoad() {
+        // Устанавливаем позицию земли
+        player.groundY = canvas.height - GAME.groundHeight - player.height;
+        player.y = player.groundY;
         
-        // Начинаем игровой цикл
-        gameLoop();
+        // Запускаем игровой цикл
+        requestAnimationFrame(gameLoop);
+    }
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         
-        // Рисуем начальный экран
-        drawStartScreen();
+        // Обновляем позицию земли
+        if (player) {
+            player.groundY = canvas.height - GAME.groundHeight - player.height;
+            if (!player.isJumping) {
+                player.y = player.groundY;
+            }
+        }
         
-        // Показываем инструкцию
-        setTimeout(() => {
-            showMessage("Нажмите ПРОБЕЛ для начала игры");
-        }, 500);
+        console.log(`📐 Размер экрана: ${canvas.width}x${canvas.height}`);
     }
 
     // ========== СОЗДАНИЕ ИЗОБРАЖЕНИЙ ==========
@@ -119,28 +139,37 @@ document.addEventListener('DOMContentLoaded', function() {
         tempCanvas.height = GAME.playerHeight;
         const tempCtx = tempCanvas.getContext('2d');
         
-        // Тело динозаврика (как в оригинале)
+        // Очень большой динозаврик для 1920x1080
         tempCtx.fillStyle = '#535353';
-        tempCtx.fillRect(5, 10, 30, 20);
+        
+        // Тело
+        tempCtx.fillRect(20, 30, 80, 60);
         
         // Ноги
-        tempCtx.fillRect(10, 30, 6, 10);
-        tempCtx.fillRect(24, 30, 6, 10);
+        tempCtx.fillRect(30, 90, 20, 30);
+        tempCtx.fillRect(70, 90, 20, 30);
         
         // Голова и шея
-        tempCtx.fillRect(30, 5, 8, 15);
-        tempCtx.fillRect(35, 2, 10, 10);
+        tempCtx.fillRect(90, 15, 25, 45);
+        tempCtx.fillRect(105, 5, 30, 30);
         
         // Глаз
         tempCtx.fillStyle = 'white';
-        tempCtx.fillRect(38, 4, 4, 4);
+        tempCtx.fillRect(115, 12, 12, 12);
         tempCtx.fillStyle = 'black';
-        tempCtx.fillRect(39, 5, 2, 2);
+        tempCtx.fillRect(118, 15, 6, 6);
         
         // Хвост
         tempCtx.fillStyle = '#535353';
-        tempCtx.fillRect(0, 15, 5, 4);
-        tempCtx.fillRect(2, 19, 3, 2);
+        tempCtx.fillRect(0, 45, 15, 12);
+        tempCtx.fillRect(6, 57, 9, 6);
+        
+        // Улыбка
+        tempCtx.strokeStyle = 'white';
+        tempCtx.lineWidth = 3;
+        tempCtx.beginPath();
+        tempCtx.arc(115, 35, 10, 0, Math.PI);
+        tempCtx.stroke();
         
         playerImg.src = tempCanvas.toDataURL();
     }
@@ -151,50 +180,50 @@ document.addEventListener('DOMContentLoaded', function() {
         tempCanvas.height = GAME.maxCactusHeight;
         const tempCtx = tempCanvas.getContext('2d');
         
-        // Зеленый кактус
+        // Большой кактус
         tempCtx.fillStyle = '#0a0';
-        tempCtx.fillRect(5, 0, 10, GAME.maxCactusHeight);
+        tempCtx.fillRect(12, 0, 16, GAME.maxCactusHeight);
         
-        // Полоски на кактусе
+        // Полоски
         tempCtx.fillStyle = '#080';
-        tempCtx.fillRect(7, 5, 6, 3);
-        tempCtx.fillRect(7, 15, 6, 3);
-        tempCtx.fillRect(7, 25, 6, 3);
+        tempCtx.fillRect(14, 15, 12, 8);
+        tempCtx.fillRect(14, 45, 12, 8);
+        tempCtx.fillRect(14, 75, 12, 8);
         
         // Шипы
         tempCtx.strokeStyle = '#060';
-        tempCtx.lineWidth = 1;
+        tempCtx.lineWidth = 2;
         
         // Левые шипы
         tempCtx.beginPath();
-        tempCtx.moveTo(5, 10);
-        tempCtx.lineTo(2, 10);
+        tempCtx.moveTo(12, 30);
+        tempCtx.lineTo(4, 30);
         tempCtx.stroke();
         
         tempCtx.beginPath();
-        tempCtx.moveTo(5, 20);
-        tempCtx.lineTo(2, 20);
+        tempCtx.moveTo(12, 60);
+        tempCtx.lineTo(4, 60);
         tempCtx.stroke();
         
         tempCtx.beginPath();
-        tempCtx.moveTo(5, 30);
-        tempCtx.lineTo(2, 30);
+        tempCtx.moveTo(12, 90);
+        tempCtx.lineTo(4, 90);
         tempCtx.stroke();
         
         // Правые шипы
         tempCtx.beginPath();
-        tempCtx.moveTo(15, 15);
-        tempCtx.lineTo(18, 15);
+        tempCtx.moveTo(28, 45);
+        tempCtx.lineTo(36, 45);
         tempCtx.stroke();
         
         tempCtx.beginPath();
-        tempCtx.moveTo(15, 25);
-        tempCtx.lineTo(18, 25);
+        tempCtx.moveTo(28, 75);
+        tempCtx.lineTo(36, 75);
         tempCtx.stroke();
         
         tempCtx.beginPath();
-        tempCtx.moveTo(15, 35);
-        tempCtx.lineTo(18, 35);
+        tempCtx.moveTo(28, 105);
+        tempCtx.lineTo(36, 105);
         tempCtx.stroke();
         
         cactusImg.src = tempCanvas.toDataURL();
@@ -204,38 +233,24 @@ document.addEventListener('DOMContentLoaded', function() {
         clouds = [];
         for (let i = 0; i < GAME.cloudCount; i++) {
             clouds.push({
-                x: Math.random() * GAME.canvasWidth,
-                y: Math.random() * 50 + 20,
-                width: Math.random() * 30 + 40,
-                speed: Math.random() * 0.5 + 0.2
+                x: Math.random() * canvas.width,
+                y: Math.random() * 200 + 50,
+                width: Math.random() * 100 + 100,
+                speed: Math.random() * 1 + 0.5
             });
         }
     }
 
-    // ========== ОСНОВНЫЕ ФУНКЦИИ ИГРЫ ==========
+    // ========== УПРАВЛЕНИЕ ИГРОЙ ==========
     function startGame() {
         if (gameRunning) return;
         
         resetGame();
         gameRunning = true;
-        startBtn.textContent = "ПАУЗА";
         gameOverScreen.style.display = 'none';
+        startScreen.style.display = 'none';
         
-        // Эффект начала игры
-        canvasContainer.classList.add('jump-effect');
-        setTimeout(() => {
-            canvasContainer.classList.remove('jump-effect');
-        }, 300);
-    }
-
-    function togglePause() {
-        if (!gameRunning) return;
-        gameRunning = !gameRunning;
-        startBtn.textContent = gameRunning ? "ПАУЗА" : "ПРОДОЛЖИТЬ";
-        
-        if (!gameRunning) {
-            showMessage("Игра на паузе");
-        }
+        console.log("▶️ Игра начата!");
     }
 
     function resetGame() {
@@ -243,64 +258,59 @@ document.addEventListener('DOMContentLoaded', function() {
         gameSpeed = GAME.initialSpeed;
         obstacles = [];
         frames = 0;
+        fpsFrameCount = 0;
+        lastFpsUpdate = Date.now();
         
-        player.y = GAME.groundY - GAME.playerHeight;
+        player.y = player.groundY;
         player.velocityY = 0;
         player.isJumping = false;
         player.isDucking = false;
         player.height = GAME.playerHeight;
         
         updateScore();
-        speedElement.textContent = gameSpeed.toFixed(1) + 'x';
+        updateFPS();
     }
 
     function gameOver() {
         gameRunning = false;
-        startBtn.textContent = "НАЧАТЬ ЗАНОВО";
+        gameOverScreen.style.display = 'flex';
         
         // Обновляем рекорд
         if (score > highScore) {
             highScore = score;
-            highScoreElement.textContent = highScore;
             localStorage.setItem('dinoHighScore', highScore);
-            
-            // Эффект нового рекорда
-            highScoreElement.classList.add('new-high-score');
+            updateHighScore();
+            highScoreElement.classList.add('new-record');
             setTimeout(() => {
-                highScoreElement.classList.remove('new-high-score');
-            }, 800);
-            
-            showMessage("🎉 Новый рекорд!");
+                highScoreElement.classList.remove('new-record');
+            }, 3000);
         }
         
-        // Показываем экран Game Over
-        finalScoreElement.textContent = score;
+        // Показываем итоговый счет
+        finalScoreElement.textContent = formatNumber(score);
         
-        setTimeout(() => {
-            gameOverScreen.style.display = 'block';
-        }, 500);
+        console.log("💀 Игра окончена! Счет:", score);
     }
 
-    // ========== ОБНОВЛЕНИЕ ИГРОВОГО СОСТОЯНИЯ ==========
+    // ========== ИГРОВАЯ ЛОГИКА ==========
     function update() {
         if (!gameRunning) return;
         
         frames++;
+        fpsFrameCount++;
         
-        // Увеличиваем скорость со временем
-        gameSpeed += GAME.speedIncrease;
-        if (frames % 10 === 0) {
-            speedElement.textContent = gameSpeed.toFixed(1) + 'x';
-            
-            // Эффект увеличения скорости
-            if (frames % 500 === 0) {
-                speedElement.classList.add('speed-up');
-                setTimeout(() => {
-                    speedElement.classList.remove('speed-up');
-                }, 500);
-                showMessage("Скорость увеличена!");
-            }
+        // Обновляем FPS каждую секунду
+        const now = Date.now();
+        if (now - lastFpsUpdate >= 1000) {
+            fps = Math.round((fpsFrameCount * 1000) / (now - lastFpsUpdate));
+            fps = Math.min(fps, 3334444); // Ограничиваем максимальное значение
+            updateFPS();
+            fpsFrameCount = 0;
+            lastFpsUpdate = now;
         }
+        
+        // Увеличиваем скорость
+        gameSpeed += GAME.speedIncrease;
         
         // Обновляем игрока
         updatePlayer();
@@ -312,24 +322,20 @@ document.addEventListener('DOMContentLoaded', function() {
         updateClouds();
         
         // Увеличиваем счет
-        score += 1;
-        if (frames % 5 === 0) {
-            updateScore();
-        }
+        score += Math.max(1, Math.floor(gameSpeed / 2));
+        updateScore();
         
         // Проверяем столкновения
         checkCollisions();
     }
 
     function updatePlayer() {
-        // Применяем гравитацию
         if (player.isJumping) {
             player.velocityY -= GAME.gravity;
             player.y -= player.velocityY;
             
-            // Проверяем, достиг ли игрок земли
-            if (player.y >= GAME.groundY - player.height) {
-                player.y = GAME.groundY - player.height;
+            if (player.y >= player.groundY) {
+                player.y = player.groundY;
                 player.isJumping = false;
                 player.velocityY = 0;
             }
@@ -337,26 +343,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateObstacles() {
-        // Удаляем препятствия, которые ушли за экран
+        // Удаляем вышедшие за экран
         obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
         
         // Двигаем препятствия
         for (let obstacle of obstacles) {
             obstacle.x -= gameSpeed;
             
-            // Отмечаем пройденные препятствия
+            // Отмечаем пройденные
             if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
                 obstacle.passed = true;
-                score += 100;
-                scoreElement.classList.add('score-increase');
+                score += 150;
+                scoreElement.classList.add('score-pop');
                 setTimeout(() => {
-                    scoreElement.classList.remove('score-increase');
-                }, 300);
+                    scoreElement.classList.remove('score-pop');
+                }, 400);
             }
         }
         
         // Создаем новые препятствия
-        if (frames % Math.floor((GAME.maxCactusGap - frames * 0.1) / gameSpeed) === 0) {
+        if (frames % Math.floor(GAME.maxCactusGap / (gameSpeed * 0.5)) === 0) {
             createObstacle();
         }
     }
@@ -367,8 +373,8 @@ document.addEventListener('DOMContentLoaded', function() {
             GAME.minCactusHeight;
         
         obstacles.push({
-            x: GAME.canvasWidth,
-            y: GAME.groundY - height,
+            x: canvas.width,
+            y: canvas.height - GAME.groundHeight - height,
             width: GAME.cactusWidth,
             height: height,
             passed: false
@@ -377,12 +383,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateClouds() {
         for (let cloud of clouds) {
-            cloud.x -= cloud.speed;
+            cloud.x -= cloud.speed * 0.5;
             
-            // Если облако ушло за экран, перемещаем его в начало
             if (cloud.x + cloud.width < 0) {
-                cloud.x = GAME.canvasWidth;
-                cloud.y = Math.random() * 50 + 20;
+                cloud.x = canvas.width;
+                cloud.y = Math.random() * 200 + 50;
             }
         }
     }
@@ -415,14 +420,6 @@ document.addEventListener('DOMContentLoaded', function() {
             player.velocityY = GAME.playerJumpForce;
             player.isDucking = false;
             player.height = GAME.playerHeight;
-            
-            // Эффект прыжка на мобильном
-            if (isMobile) {
-                jumpBtn.classList.add('jump-effect');
-                setTimeout(() => {
-                    jumpBtn.classList.remove('jump-effect');
-                }, 300);
-            }
         }
     }
 
@@ -431,18 +428,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         player.isDucking = startDucking;
         player.height = startDucking ? player.duckHeight : GAME.playerHeight;
-        player.y = startDucking ? GAME.groundY - player.duckHeight : 
-                                 GAME.groundY - GAME.playerHeight;
+        player.y = startDucking ? 
+            player.groundY + (GAME.playerHeight - player.duckHeight) : 
+            player.groundY;
     }
 
     // ========== ОТРИСОВКА ==========
     function draw() {
-        // Очищаем канвас
-        ctx.clearRect(0, 0, GAME.canvasWidth, GAME.canvasHeight);
+        // Очищаем экран
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Рисуем фон (небо)
-        ctx.fillStyle = '#f7f7f7';
-        ctx.fillRect(0, 0, GAME.canvasWidth, GAME.canvasHeight);
+        // Рисуем фон
+        drawBackground();
         
         // Рисуем облака
         drawClouds();
@@ -450,314 +447,265 @@ document.addEventListener('DOMContentLoaded', function() {
         // Рисуем землю
         drawGround();
         
-        // Рисуем игрока
-        drawPlayer();
-        
         // Рисуем препятствия
         drawObstacles();
         
-        // Рисуем счет
-        drawScore();
-        
-        // Если игра не запущена, рисуем инструкцию
-        if (!gameRunning && obstacles.length === 0) {
-            drawStartScreen();
-        }
+        // Рисуем игрока
+        drawPlayer();
     }
 
-    function drawStartScreen() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, GAME.canvasWidth, GAME.canvasHeight);
+    function drawBackground() {
+        // Градиентное небо
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.7);
+        gradient.addColorStop(0, '#87CEEB');
+        gradient.addColorStop(1, '#E0F7FF');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('ДИНОЗАВРИК', GAME.canvasWidth / 2, 50);
-        
-        ctx.font = '16px Arial';
-        ctx.fillText('Нажмите ПРОБЕЛ чтобы начать', GAME.canvasWidth / 2, 80);
-        
-        ctx.font = '14px Arial';
-        ctx.fillText('ПРОБЕЛ или СТРЕЛКА ВВЕРХ - прыжок', GAME.canvasWidth / 2, 110);
-        ctx.fillText('СТРЕЛКА ВНИЗ - пригнуться', GAME.canvasWidth / 2, 130);
-    }
-
-    function drawGround() {
-        // Земля
-        ctx.fillStyle = '#535353';
-        ctx.fillRect(0, GAME.groundY, GAME.canvasWidth, GAME.groundHeight);
-        
-        // Линия горизонта
-        ctx.strokeStyle = '#ddd';
-        ctx.lineWidth = 1;
+        // Солнце
+        ctx.fillStyle = '#FFD700';
         ctx.beginPath();
-        ctx.moveTo(0, GAME.groundY);
-        ctx.lineTo(GAME.canvasWidth, GAME.groundY);
-        ctx.stroke();
+        ctx.arc(canvas.width - 100, 100, 60, 0, Math.PI * 2);
+        ctx.fill();
         
-        // Текстура земли
-        ctx.fillStyle = '#666';
-        for (let i = 0; i < GAME.canvasWidth; i += 20) {
-            ctx.fillRect(i, GAME.groundY, 2, 3);
+        // Лучи солнца
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+        ctx.lineWidth = 4;
+        for (let i = 0; i < 12; i++) {
+            const angle = (i * Math.PI) / 6;
+            ctx.beginPath();
+            ctx.moveTo(
+                canvas.width - 100 + Math.cos(angle) * 70,
+                100 + Math.sin(angle) * 70
+            );
+            ctx.lineTo(
+                canvas.width - 100 + Math.cos(angle) * 100,
+                100 + Math.sin(angle) * 100
+            );
+            ctx.stroke();
         }
     }
 
     function drawClouds() {
         for (let cloud of clouds) {
-            ctx.fillStyle = '#f0f0f0';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
             
-            // Рисуем пушистое облако
+            // Большие пушистые облака
             ctx.beginPath();
-            ctx.arc(cloud.x + 10, cloud.y, 8, 0, Math.PI * 2);
-            ctx.arc(cloud.x + 20, cloud.y - 5, 10, 0, Math.PI * 2);
-            ctx.arc(cloud.x + 30, cloud.y, 8, 0, Math.PI * 2);
-            ctx.arc(cloud.x + 20, cloud.y + 5, 7, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 30, cloud.y, 25, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 60, cloud.y - 15, 35, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 90, cloud.y, 25, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 60, cloud.y + 15, 20, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 
-    function drawPlayer() {
-        // Рисуем картинку игрока
-        ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+    function drawGround() {
+        // Земля
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(0, canvas.height - GAME.groundHeight, canvas.width, GAME.groundHeight);
         
-        // Если игрок пригнулся, рисуем дополнительную линию
-        if (player.isDucking) {
-            ctx.fillStyle = '#535353';
-            ctx.fillRect(player.x + 5, player.y + player.height - 5, player.width - 10, 3);
+        // Трава сверху
+        ctx.fillStyle = '#228B22';
+        ctx.fillRect(0, canvas.height - GAME.groundHeight, canvas.width, 5);
+        
+        // Текстура земли
+        ctx.fillStyle = '#A0522D';
+        for (let i = 0; i < canvas.width; i += 50) {
+            ctx.fillRect(i, canvas.height - GAME.groundHeight + 5, 3, GAME.groundHeight - 5);
         }
+    }
+
+    function drawPlayer() {
+        // Рисуем картинку игрока (очень большую)
+        ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
         
         // Тень под игроком
         if (player.isJumping) {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.beginPath();
             ctx.ellipse(
-                player.x + player.width/2, 
-                GAME.groundY, 
-                player.width/2, 
-                3, 
+                player.x + player.width/2,
+                canvas.height - GAME.groundHeight,
+                player.width/3,
+                8,
                 0, 0, Math.PI * 2
             );
             ctx.fill();
+        }
+        
+        // Если пригнулся
+        if (player.isDucking) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(
+                player.x + 20,
+                player.y + player.height - 15,
+                player.width - 40,
+                10
+            );
         }
     }
 
     function drawObstacles() {
         for (let obstacle of obstacles) {
             // Рисуем кактус
-            ctx.drawImage(cactusImg, 0, cactusImg.height - obstacle.height, 
+            ctx.drawImage(
+                cactusImg,
+                0, cactusImg.height - obstacle.height,
                 obstacle.width, obstacle.height,
-                obstacle.x, obstacle.y, 
-                obstacle.width, obstacle.height);
+                obstacle.x, obstacle.y,
+                obstacle.width, obstacle.height
+            );
             
             // Тень под кактусом
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(
-                obstacle.x + 2, 
-                GAME.groundY, 
-                obstacle.width - 4, 
-                3
+                obstacle.x + 5,
+                canvas.height - GAME.groundHeight,
+                obstacle.width - 10,
+                10
             );
+            
+            // Колючки эффект
+            ctx.strokeStyle = '#060';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 3; i++) {
+                const y = obstacle.y + 20 + i * 30;
+                if (y < obstacle.y + obstacle.height - 10) {
+                    ctx.beginPath();
+                    ctx.moveTo(obstacle.x, y);
+                    ctx.lineTo(obstacle.x - 8, y);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(obstacle.x + obstacle.width, y + 15);
+                    ctx.lineTo(obstacle.x + obstacle.width + 8, y + 15);
+                    ctx.stroke();
+                }
+            }
         }
-    }
-
-    function drawScore() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(10, 10, 100, 30);
-        
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`СЧЕТ: ${Math.floor(score/10)}`, 20, 30);
     }
 
     // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
     function updateScore() {
-        scoreElement.textContent = Math.floor(score / 10);
+        scoreElement.textContent = formatNumber(score);
     }
 
-    function showMessage(text) {
-        // Создаем временное сообщение
-        const message = document.createElement('div');
-        message.style.cssText = `
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            z-index: 1000;
-            animation: fadeInOut 2s ease;
-            pointer-events: none;
-        `;
-        
-        // Добавляем стиль для анимации
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeInOut {
-                0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                20% { opacity: 1; transform: translateX(-50%) translateY(0); }
-                80% { opacity: 1; transform: translateX(-50%) translateY(0); }
-                100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        message.textContent = text;
-        document.body.appendChild(message);
-        
-        // Удаляем сообщение через 2 секунды
-        setTimeout(() => {
-            if (message.parentNode) {
-                message.parentNode.removeChild(message);
-            }
-            if (style.parentNode) {
-                style.parentNode.removeChild(style);
-            }
-        }, 2000);
+    function updateHighScore() {
+        highScoreElement.textContent = formatNumber(highScore);
     }
 
-    // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
-    function setupEventListeners() {
+    function updateFPS() {
+        fpsElement.textContent = formatNumber(fps);
+        
+        // Эффект при изменении FPS
+        if (fps < 30) {
+            fpsElement.style.color = '#ff4444';
+        } else if (fps < 50) {
+            fpsElement.style.color = '#ff9800';
+        } else {
+            fpsElement.style.color = '#4CAF50';
+        }
+    }
+
+    function formatNumber(num) {
+        if (num >= 1000000000) {
+            return (num / 1000000000).toFixed(1) + 'B';
+        }
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        }
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+    }
+
+    // ========== УПРАВЛЕНИЕ ==========
+    function setupControls() {
         // Клавиатура
-        document.addEventListener('keydown', handleKeyDown);
-        document.addEventListener('keyup', handleKeyUp);
+        document.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'Space':
+                case 'ArrowUp':
+                    e.preventDefault();
+                    jump();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    duck(true);
+                    break;
+                case 'Enter':
+                    if (!gameRunning && gameOverScreen.style.display === 'flex') {
+                        startGame();
+                    }
+                    break;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'ArrowDown') {
+                duck(false);
+            }
+        });
         
         // Кнопки
-        startBtn.addEventListener('click', handleStartClick);
-        jumpBtn.addEventListener('click', jump);
-        resetBtn.addEventListener('click', handleResetClick);
-        restartBtn.addEventListener('click', startGame);
-        
-        // Клик по канвасу
-        canvas.addEventListener('click', handleCanvasClick);
-        
-        // Касания для мобильных
-        canvas.addEventListener('touchstart', handleTouchStart);
-        
-        // Изменение размера окна
-        window.addEventListener('resize', handleResize);
-        
-        // Предотвращаем контекстное меню на канвасе
-        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-    }
-
-    function handleKeyDown(e) {
-        switch(e.code) {
-            case 'Space':
-                e.preventDefault();
-                if (!gameRunning && obstacles.length === 0) {
-                    startGame();
-                } else if (gameRunning) {
-                    jump();
-                }
-                break;
-            case 'ArrowUp':
+        if (jumpBtn) {
+            jumpBtn.addEventListener('click', jump);
+            jumpBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 jump();
-                break;
-            case 'ArrowDown':
-                e.preventDefault();
-                duck(true);
-                break;
-            case 'KeyP':
-                if (gameRunning) {
-                    togglePause();
-                }
-                break;
-            case 'Escape':
-                if (gameRunning) {
-                    togglePause();
-                }
-                break;
+            });
         }
-    }
-
-    function handleKeyUp(e) {
-        if (e.code === 'ArrowDown') {
-            duck(false);
-        }
-    }
-
-    function handleStartClick() {
-        if (!gameRunning) {
-            startGame();
-        } else {
-            togglePause();
-        }
-    }
-
-    function handleResetClick() {
-        resetGame();
-        gameRunning = false;
-        startBtn.textContent = "НАЧАТЬ ИГРУ";
-        gameOverScreen.style.display = 'none';
-        drawStartScreen();
-        showMessage("Игра сброшена");
-    }
-
-    function handleCanvasClick() {
-        if (!gameRunning) {
-            startGame();
-        }
-    }
-
-    function handleTouchStart(e) {
-        e.preventDefault();
-        if (!gameRunning) {
-            startGame();
-        } else {
-            jump();
-        }
-    }
-
-    function handleResize() {
-        // Масштабируем канвас для мобильных устройств
-        const container = canvas.parentElement;
-        const containerWidth = container.clientWidth;
-        const aspectRatio = GAME.canvasWidth / GAME.canvasHeight;
-        const newWidth = Math.min(GAME.canvasWidth, containerWidth);
-        const newHeight = newWidth / aspectRatio;
         
-        canvas.style.width = newWidth + 'px';
-        canvas.style.height = newHeight + 'px';
+        if (restartBtn) {
+            restartBtn.addEventListener('click', startGame);
+        }
+        
+        if (startBtn) {
+            startBtn.addEventListener('click', startGame);
+        }
+        
+        // Клик по канвасу (старт на ПК)
+        canvas.addEventListener('click', (e) => {
+            if (!gameRunning && !isMobile) {
+                startGame();
+            }
+        });
+        
+        // Изменение размера окна
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', resizeCanvas);
+        
+        // Предотвращаем контекстное меню
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        // Предотвращаем скролл на мобильных
+        document.addEventListener('touchmove', (e) => {
+            if (e.target === canvas || e.target === jumpBtn) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     }
 
     // ========== ИГРОВОЙ ЦИКЛ ==========
-    function gameLoop() {
+    function gameLoop(timestamp) {
         update();
         draw();
         gameLoopId = requestAnimationFrame(gameLoop);
     }
 
-    // ========== ЗАПУСК ИГРЫ ==========
-    // Ждем загрузки изображений
-    let imagesLoaded = 0;
-    const totalImages = 2; // playerImg и cactusImg
+    // ========== ЗАПУСК ==========
+    // Ждем полной загрузки страницы
+    window.addEventListener('load', function() {
+        setTimeout(init, 100);
+    });
     
-    function checkAllImagesLoaded() {
-        imagesLoaded++;
-        if (imagesLoaded === totalImages) {
-            init();
-        }
-    }
-    
-    playerImg.onload = checkAllImagesLoaded;
-    cactusImg.onload = checkAllImagesLoaded;
-    
-    // Таймаут на случай проблем с загрузкой
+    // Аварийный запуск
     setTimeout(() => {
         if (!gameLoopId) {
-            console.log("Загрузка изображений...");
+            console.log("⚠️ Аварийный запуск игры...");
             init();
         }
     }, 2000);
-    
-    // Запускаем игру при полной загрузке страницы
-    if (document.readyState === 'complete') {
-        setTimeout(init, 100);
-    }
 });

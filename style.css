@@ -21,7 +21,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(180deg, #0c1445 0%, #1a1a2e 100%);
     position: fixed;
     top: 0;
     left: 0;
@@ -36,7 +36,6 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: #f7f7f7;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -52,7 +51,6 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: #fff;
     display: block;
     cursor: pointer;
     image-rendering: -moz-crisp-edges;
@@ -61,78 +59,75 @@ body {
     image-rendering: crisp-edges;
 }
 
-/* Оверлей счета - только цифры */
+/* Оверлей счета - простой и минималистичный */
 .score-overlay {
     position: fixed;
-    top: 30px;
-    left: 30px;
+    top: 20px;
+    left: 20px;
     z-index: 10;
     display: flex;
-    gap: 40px;
-    background: rgba(0, 0, 0, 0.85);
-    padding: 20px 35px;
-    border-radius: 15px;
-    border: 3px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
+    gap: 30px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px 25px;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    backdrop-filter: blur(3px);
 }
 
 .score-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 120px;
+    min-width: 100px;
 }
 
 .score-label {
-    font-size: 14px;
-    color: #aaa;
-    margin-bottom: 8px;
+    font-size: 12px;
+    color: #D4AF37;
+    margin-bottom: 5px;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     font-weight: 600;
+    opacity: 0.8;
 }
 
 .score-value {
-    font-size: 48px;
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 0 0 20px currentColor;
+    font-size: 32px;
+    font-weight: 800;
+    color: #FFD700;
+    text-shadow: 0 0 10px #FFD700;
     font-family: 'Courier New', monospace;
     line-height: 1;
 }
 
 #score {
-    color: #4CAF50;
+    color: #FFD700;
 }
 
 #highScore {
-    color: #2196F3;
+    color: #4ECDC4;
 }
 
 #fps {
-    color: #FF9800;
+    color: #FF6B6B;
 }
 
 /* Кнопка прыжка для мобильных - ТОЛЬКО НА ТЕЛЕФОНЕ */
 .mobile-jump-btn {
     position: fixed;
-    bottom: 50px;
-    right: 50px;
-    width: 140px;
-    height: 140px;
+    bottom: 40px;
+    right: 40px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
-    background: linear-gradient(145deg, #4CAF50, #2E7D32);
-    border: none;
+    background: rgba(212, 175, 55, 0.8);
+    border: 2px solid rgba(255, 215, 0, 0.5);
     cursor: pointer;
     z-index: 100;
     display: none;
+    transition: all 0.1s ease;
     box-shadow: 
-        0 15px 35px rgba(76, 175, 80, 0.5),
-        inset 0 4px 10px rgba(255, 255, 255, 0.3),
-        inset 0 -4px 10px rgba(0, 0, 0, 0.2);
-    transition: all 0.15s ease;
-    overflow: hidden;
+        0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .mobile-jump-btn::before {
@@ -141,397 +136,241 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 60px;
-    color: white;
+    font-size: 40px;
+    color: #8B4513;
     font-weight: bold;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.mobile-jump-btn::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s;
 }
 
 .mobile-jump-btn:active {
-    transform: scale(0.92);
-    box-shadow: 
-        0 5px 20px rgba(76, 175, 80, 0.3),
-        inset 0 4px 10px rgba(255, 255, 255, 0.2),
-        inset 0 -4px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(0.9);
+    background: rgba(212, 175, 55, 1);
 }
 
-.mobile-jump-btn:active::after {
-    opacity: 1;
-}
-
-/* Экран Game Over - большой и красивый */
+/* Экран Game Over - простой */
 .game-over {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.95);
-    color: white;
-    padding: 60px 80px;
-    border-radius: 25px;
+    background: rgba(20, 20, 40, 0.95);
+    color: #FFD700;
+    padding: 40px;
+    border-radius: 15px;
     text-align: center;
     display: none;
     z-index: 1000;
-    box-shadow: 
-        0 0 100px rgba(255, 0, 0, 0.6),
-        0 20px 60px rgba(0, 0, 0, 0.8);
-    border: 4px solid #ff4444;
-    min-width: 500px;
-    min-height: 350px;
+    border: 2px solid #D4AF37;
+    min-width: 300px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(20px);
-    animation: gameOverAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes gameOverAppear {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.8);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
+    backdrop-filter: blur(5px);
 }
 
 .game-over h2 {
-    font-size: 56px;
-    margin-bottom: 30px;
-    color: #ff4444;
-    text-shadow: 0 0 30px rgba(255, 68, 68, 0.8);
-    letter-spacing: 3px;
-    font-weight: 900;
-    text-transform: uppercase;
+    font-size: 36px;
+    margin-bottom: 20px;
+    color: #D4AF37;
+    font-weight: 800;
 }
 
 .game-over p {
-    font-size: 42px;
-    margin-bottom: 50px;
-    color: #fff;
+    font-size: 28px;
+    margin-bottom: 30px;
+    color: #FFD700;
     font-weight: 700;
     font-family: 'Courier New', monospace;
 }
 
 .game-over button {
-    padding: 25px 50px;
-    font-size: 28px;
-    background: linear-gradient(145deg, #2196F3, #0b7dda);
-    color: white;
+    padding: 15px 30px;
+    font-size: 18px;
+    background: #D4AF37;
+    color: #8B4513;
     border: none;
-    border-radius: 15px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s;
     font-weight: 700;
-    min-width: 300px;
-    box-shadow: 
-        0 10px 30px rgba(33, 150, 243, 0.4),
-        inset 0 2px 5px rgba(255, 255, 255, 0.3);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    position: relative;
-    overflow: hidden;
-}
-
-.game-over button:hover {
-    transform: translateY(-5px);
-    box-shadow: 
-        0 15px 40px rgba(33, 150, 243, 0.6),
-        inset 0 2px 5px rgba(255, 255, 255, 0.3);
-    background: linear-gradient(145deg, #0b7dda, #2196F3);
+    min-width: 200px;
+    transition: all 0.2s;
 }
 
 .game-over button:active {
-    transform: translateY(2px);
-    box-shadow: 
-        0 5px 20px rgba(33, 150, 243, 0.4),
-        inset 0 2px 5px rgba(255, 255, 255, 0.3);
+    transform: scale(0.98);
 }
 
-.game-over button::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.7s;
-}
-
-.game-over button:hover::after {
-    left: 100%;
-}
-
-/* Стартовый экран - ТОЛЬКО НА КОМПЬЮТЕРЕ */
+/* Стартовый экран */
 .start-screen {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.95);
-    color: white;
+    background: rgba(20, 20, 40, 0.95);
+    color: #FFD700;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     text-align: center;
-    padding: 40px;
-    backdrop-filter: blur(10px);
+    padding: 20px;
     display: none;
 }
 
 .start-screen h1 {
-    font-size: 64px;
-    margin-bottom: 30px;
-    color: #4CAF50;
-    text-shadow: 0 0 30px rgba(76, 175, 80, 0.7);
-    letter-spacing: 2px;
-    font-weight: 900;
-    animation: titleGlow 2s infinite alternate;
-}
-
-@keyframes titleGlow {
-    from {
-        text-shadow: 0 0 20px rgba(76, 175, 80, 0.7);
-    }
-    to {
-        text-shadow: 0 0 40px rgba(76, 175, 80, 1), 0 0 60px rgba(76, 175, 80, 0.5);
-    }
+    font-size: 36px;
+    margin-bottom: 20px;
+    color: #D4AF37;
+    font-weight: 800;
 }
 
 .start-screen p {
-    font-size: 24px;
-    margin-bottom: 50px;
-    max-width: 800px;
-    line-height: 1.6;
-    color: #ccc;
+    font-size: 18px;
+    margin-bottom: 30px;
+    max-width: 500px;
+    line-height: 1.5;
+    color: #FFD700;
 }
 
 .controls-info {
     background: rgba(255, 255, 255, 0.1);
-    padding: 30px 50px;
-    border-radius: 15px;
-    margin-bottom: 50px;
-    font-size: 22px;
-    backdrop-filter: blur(5px);
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    font-size: 16px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .controls-info p {
-    margin: 15px 0;
-    font-size: 22px;
+    margin: 10px 0;
+    font-size: 16px;
+    color: #FFD700;
 }
 
 .key {
     display: inline-block;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: 8px 20px;
-    border-radius: 8px;
-    margin: 0 10px;
+    background: rgba(212, 175, 55, 0.2);
+    color: #FFD700;
+    padding: 5px 15px;
+    border-radius: 5px;
+    margin: 0 5px;
     font-family: 'Courier New', monospace;
-    font-size: 20px;
+    font-size: 14px;
     font-weight: bold;
-    min-width: 100px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .start-screen button {
-    padding: 25px 60px;
-    font-size: 32px;
-    background: linear-gradient(145deg, #4CAF50, #2E7D32);
-    color: white;
+    padding: 15px 40px;
+    font-size: 20px;
+    background: #D4AF37;
+    color: #8B4513;
     border: none;
-    border-radius: 15px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: 700;
-    box-shadow: 
-        0 15px 40px rgba(76, 175, 80, 0.4),
-        inset 0 2px 5px rgba(255, 255, 255, 0.3);
-    transition: all 0.3s;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    position: relative;
-    overflow: hidden;
+    transition: all 0.2s;
 }
 
-.start-screen button:hover {
-    transform: scale(1.05);
-    box-shadow: 
-        0 20px 50px rgba(76, 175, 80, 0.6),
-        inset 0 2px 5px rgba(255, 255, 255, 0.3);
-    background: linear-gradient(145deg, #2E7D32, #4CAF50);
-}
-
-.start-screen button::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.7s;
-}
-
-.start-screen button:hover::after {
-    left: 100%;
+.start-screen button:active {
+    transform: scale(0.98);
 }
 
 /* Анимации для счета */
 @keyframes scorePop {
     0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
+    50% { transform: scale(1.2); }
     100% { transform: scale(1); }
 }
 
 .score-pop {
-    animation: scorePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes newRecord {
-    0% { 
-        color: #2196F3;
-        text-shadow: 0 0 20px #2196F3;
-    }
-    50% { 
-        color: #FFD700;
-        text-shadow: 0 0 40px #FFD700, 0 0 60px #FFD700;
-        transform: scale(1.2);
-    }
-    100% { 
-        color: #2196F3;
-        text-shadow: 0 0 20px #2196F3;
-    }
-}
-
-.new-record {
-    animation: newRecord 1s ease 3;
-}
-
-@keyframes pulse {
-    0% { opacity: 0.7; }
-    50% { opacity: 1; }
-    100% { opacity: 0.7; }
-}
-
-/* Эффект для увеличения скорости */
-.speed-effect {
-    animation: pulse 0.5s ease;
+    animation: scorePop 0.3s ease;
 }
 
 /* Адаптивность для очень больших экранов (4K) */
 @media (min-width: 2560px) {
     .score-overlay {
-        top: 50px;
-        left: 50px;
-        padding: 30px 50px;
-        gap: 60px;
+        top: 40px;
+        left: 40px;
+        padding: 20px 40px;
+        gap: 50px;
     }
     
     .score-label {
-        font-size: 18px;
+        font-size: 14px;
     }
     
     .score-value {
-        font-size: 64px;
-    }
-    
-    .score-item {
-        min-width: 180px;
+        font-size: 40px;
     }
     
     .game-over {
-        padding: 80px 120px;
-        min-width: 700px;
-        min-height: 500px;
-        border-radius: 35px;
-        border-width: 6px;
+        padding: 50px;
+        min-width: 400px;
     }
     
     .game-over h2 {
-        font-size: 72px;
+        font-size: 44px;
     }
     
     .game-over p {
-        font-size: 56px;
+        font-size: 36px;
     }
     
     .game-over button {
-        padding: 35px 70px;
-        font-size: 36px;
-        min-width: 400px;
-        border-radius: 20px;
+        padding: 20px 40px;
+        font-size: 22px;
+        min-width: 250px;
     }
     
     .mobile-jump-btn {
-        width: 180px;
-        height: 180px;
-        bottom: 70px;
-        right: 70px;
+        width: 120px;
+        height: 120px;
+        bottom: 60px;
+        right: 60px;
     }
     
     .mobile-jump-btn::before {
-        font-size: 80px;
+        font-size: 50px;
     }
 }
 
 /* Адаптивность для средних экранов */
 @media (max-width: 1366px) {
     .score-overlay {
-        top: 20px;
-        left: 20px;
-        padding: 15px 25px;
-        gap: 30px;
+        top: 15px;
+        left: 15px;
+        padding: 12px 20px;
+        gap: 25px;
     }
     
     .score-label {
-        font-size: 12px;
+        font-size: 11px;
     }
     
     .score-value {
-        font-size: 36px;
-    }
-    
-    .score-item {
-        min-width: 100px;
+        font-size: 28px;
     }
     
     .game-over {
-        padding: 40px 60px;
-        min-width: 400px;
-        min-height: 300px;
+        padding: 30px;
+        min-width: 280px;
     }
     
     .game-over h2 {
-        font-size: 42px;
-    }
-    
-    .game-over p {
         font-size: 32px;
     }
     
-    .game-over button {
-        padding: 20px 40px;
+    .game-over p {
         font-size: 24px;
-        min-width: 250px;
+    }
+    
+    .game-over button {
+        padding: 12px 25px;
+        font-size: 16px;
+        min-width: 180px;
     }
 }
 
@@ -546,113 +385,111 @@ body {
     }
     
     .score-overlay {
-        top: 15px;
-        left: 15px;
-        padding: 12px 20px;
-        gap: 20px;
+        top: 10px;
+        left: 10px;
+        padding: 10px 15px;
+        gap: 15px;
         flex-direction: column;
         align-items: flex-start;
-        background: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.7);
     }
     
     .score-item {
         flex-direction: row;
         align-items: center;
-        gap: 15px;
+        gap: 10px;
         min-width: auto;
     }
     
     .score-label {
         margin-bottom: 0;
-        font-size: 11px;
-        min-width: 60px;
+        font-size: 10px;
+        min-width: 50px;
     }
     
     .score-value {
-        font-size: 28px;
+        font-size: 24px;
     }
     
     .game-over {
-        padding: 30px;
-        min-width: 90%;
-        min-height: auto;
-        border-radius: 20px;
-        border-width: 3px;
+        padding: 20px;
+        min-width: 85%;
+        border-radius: 10px;
     }
     
     .game-over h2 {
-        font-size: 32px;
-        margin-bottom: 20px;
+        font-size: 28px;
+        margin-bottom: 15px;
     }
     
     .game-over p {
-        font-size: 24px;
-        margin-bottom: 30px;
+        font-size: 20px;
+        margin-bottom: 20px;
     }
     
     .game-over button {
-        padding: 18px 30px;
-        font-size: 20px;
-        min-width: 200px;
+        padding: 12px 20px;
+        font-size: 16px;
+        min-width: 160px;
     }
     
     .mobile-jump-btn {
-        width: 120px;
-        height: 120px;
-        bottom: 30px;
-        right: 30px;
+        width: 80px;
+        height: 80px;
+        bottom: 20px;
+        right: 20px;
     }
     
     .mobile-jump-btn::before {
-        font-size: 50px;
+        font-size: 30px;
     }
 }
 
 /* Для очень маленьких телефонов */
 @media (max-width: 480px) {
     .score-overlay {
-        top: 10px;
-        left: 10px;
-        padding: 10px 15px;
-        gap: 15px;
+        top: 8px;
+        left: 8px;
+        padding: 8px 12px;
+        gap: 12px;
     }
     
     .score-label {
-        font-size: 10px;
-        min-width: 50px;
+        font-size: 9px;
+        min-width: 45px;
     }
     
     .score-value {
-        font-size: 22px;
-    }
-    
-    .game-over {
-        padding: 25px;
-    }
-    
-    .game-over h2 {
-        font-size: 28px;
-    }
-    
-    .game-over p {
         font-size: 20px;
     }
     
-    .game-over button {
-        padding: 15px 25px;
+    .game-over {
+        padding: 15px;
+    }
+    
+    .game-over h2 {
+        font-size: 24px;
+    }
+    
+    .game-over p {
         font-size: 18px;
-        min-width: 180px;
+    }
+    
+    .game-over button {
+        padding: 10px 15px;
+        font-size: 14px;
+        min-width: 140px;
     }
     
     .mobile-jump-btn {
-        width: 100px;
-        height: 100px;
-        bottom: 20px;
-        right: 20px;
+        width: 70px;
+        height: 70px;
+        bottom: 15px;
+        right: 15px;
     }
     
     .mobile-jump-btn::before {
-        font-size: 40px;
+        font-size: 25px;
     }
 }
 
@@ -660,99 +497,63 @@ body {
 @media (max-height: 500px) and (orientation: landscape) {
     .score-overlay {
         flex-direction: row;
-        top: 10px;
-        left: 10px;
-        padding: 8px 15px;
-        gap: 25px;
+        top: 5px;
+        left: 5px;
+        padding: 5px 10px;
+        gap: 20px;
     }
     
     .score-item {
         flex-direction: column;
         align-items: center;
-        gap: 5px;
+        gap: 2px;
     }
     
     .score-label {
-        font-size: 9px;
+        font-size: 8px;
         min-width: auto;
     }
     
     .score-value {
-        font-size: 20px;
+        font-size: 16px;
     }
     
     .mobile-jump-btn {
-        width: 80px;
-        height: 80px;
-        bottom: 15px;
-        right: 15px;
+        width: 60px;
+        height: 60px;
+        bottom: 10px;
+        right: 10px;
     }
     
     .mobile-jump-btn::before {
-        font-size: 30px;
+        font-size: 20px;
     }
     
     .game-over {
-        padding: 20px;
-        min-width: 80%;
+        padding: 15px;
+        min-width: 70%;
     }
     
     .game-over h2 {
-        font-size: 24px;
-        margin-bottom: 15px;
+        font-size: 20px;
+        margin-bottom: 10px;
     }
     
     .game-over p {
-        font-size: 18px;
-        margin-bottom: 20px;
+        font-size: 16px;
+        margin-bottom: 15px;
     }
     
     .game-over button {
-        padding: 12px 20px;
-        font-size: 16px;
-        min-width: 150px;
-    }
-}
-
-/* Для очень высоких экранов */
-@media (min-height: 1200px) {
-    .score-overlay {
-        top: 50px;
-        left: 50px;
-    }
-    
-    .mobile-jump-btn {
-        bottom: 80px;
-        right: 80px;
+        padding: 8px 15px;
+        font-size: 12px;
+        min-width: 120px;
     }
 }
 
 /* Отключение выделения и контекстного меню */
 #gameCanvas {
     -webkit-tap-highlight-color: transparent;
-}
-
-/* Плавная прокрутка для мобильных */
-html {
-    scroll-behavior: smooth;
-}
-
-/* Оптимизация для устройств с поддержкой hover */
-@media (hover: hover) and (pointer: fine) {
-    .game-over button:hover,
-    .start-screen button:hover,
-    .mobile-jump-btn:hover {
-        transition: all 0.2s ease;
-    }
-}
-
-/* Для устройств без поддержки hover (мобильные) */
-@media (hover: none) and (pointer: coarse) {
-    .game-over button:active,
-    .start-screen button:active,
-    .mobile-jump-btn:active {
-        transition: all 0.1s ease;
-    }
 }
 
 /* Запрет масштабирования на мобильных */
@@ -764,62 +565,40 @@ html {
     }
 }
 
-/* Эффект параллакса для фона (если понадобится) */
-.parallax-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-        45deg,
-        rgba(102, 126, 234, 0.1) 0%,
-        rgba(118, 75, 162, 0.1) 100%
-    );
-    animation: parallax 20s linear infinite;
-    z-index: 0;
-}
-
-@keyframes parallax {
-    0% {
-        transform: translate(0, 0);
-    }
-    100% {
-        transform: translate(-50%, -50%);
-    }
-}
-
-/* Эффект частиц (опционально) */
-.particles {
+/* Простая фоновая текстура */
+.egypt-bg {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    background: 
+        linear-gradient(90deg, 
+            transparent 49%, 
+            rgba(212, 175, 55, 0.02) 50%, 
+            transparent 51%
+        ),
+        linear-gradient(transparent 49%, 
+            rgba(212, 175, 55, 0.02) 50%, 
+            transparent 51%
+        );
+    background-size: 50px 50px;
     z-index: 0;
+    opacity: 0.2;
 }
 
-.particle {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    animation: float 15s infinite linear;
+/* Убираем все лишние анимации и эффекты */
+*:focus {
+    outline: none;
 }
 
-@keyframes float {
-    0% {
-        transform: translateY(100vh) rotate(0deg);
-        opacity: 0;
+/* Простой hover эффект только для десктопа */
+@media (hover: hover) and (pointer: fine) {
+    .game-over button:hover {
+        background: #FFD700;
     }
-    10% {
-        opacity: 1;
-    }
-    90% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(-100px) rotate(360deg);
-        opacity: 0;
+    
+    .start-screen button:hover {
+        background: #FFD700;
     }
 }

@@ -1,19 +1,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     // ========== НАСТРОЙКИ ИГРЫ ==========
     const GAME = {
-        playerWidth: 120,           // Очень большой размер для 1920x1080
-        playerHeight: 120,          // Очень большой размер
-        playerJumpForce: 18,        // Высокий прыжок
-        gravity: 0.9,
-        initialSpeed: 10,
-        speedIncrease: 0.0003,
-        cactusWidth: 40,           // Большие кактусы
-        minCactusHeight: 70,
-        maxCactusHeight: 120,
-        minCactusGap: 350,
-        maxCactusGap: 550,
+        playerWidth: 100,           // Размер игрока
+        playerHeight: 100,          // Размер игрока
+        playerJumpForce: 16,        // Сила прыжка
+        gravity: 0.8,
+        initialSpeed: 6,           // Начальная скорость (медленнее)
+        speedIncrease: 0.0001,     // Очень медленное ускорение
+        cactusWidth: 30,           // Размер кактуса
+        minCactusHeight: 50,
+        maxCactusHeight: 90,
+        minCactusGap: 450,         // Больше расстояние между кактусами
+        maxCactusGap: 650,         // Еще больше расстояние
         groundHeight: 30,
-        cloudCount: 5
+        cloudCount: 3,
+        starCount: 100,
+        moonSize: 80
     };
 
     // ========== ПЕРЕМЕННЫЕ ИГРЫ ==========
@@ -28,10 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let fpsFrameCount = 0;
     let gameLoopId = null;
     let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let isNight = false;  // Режим дня/ночи
+    let nightTransition = 0; // Плавный переход дня в ночь
     
     // ========== ИГРОВЫЕ ОБЪЕКТЫ ==========
     let player = {
-        x: 200,
+        x: 150,
         y: 0,
         width: GAME.playerWidth,
         height: GAME.playerHeight,
@@ -44,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let obstacles = [];
     let clouds = [];
+    let stars = [];
     
     // ========== ИЗОБРАЖЕНИЯ ==========
     let playerImg = new Image();
@@ -94,8 +99,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Настраиваем управление
         setupControls();
         
-        // Создаем облака
+        // Создаем облака и звезды
         createClouds();
+        createStars();
         
         // Обновляем рекорд
         updateHighScore();
@@ -129,6 +135,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
+        // Пересоздаем звезды при изменении размера
+        createStars();
+        
         console.log(`📐 Размер экрана: ${canvas.width}x${canvas.height}`);
     }
 
@@ -139,36 +148,36 @@ document.addEventListener('DOMContentLoaded', function() {
         tempCanvas.height = GAME.playerHeight;
         const tempCtx = tempCanvas.getContext('2d');
         
-        // Очень большой динозаврик для 1920x1080
+        // Динозаврик
         tempCtx.fillStyle = '#535353';
         
         // Тело
-        tempCtx.fillRect(20, 30, 80, 60);
+        tempCtx.fillRect(15, 25, 70, 50);
         
         // Ноги
-        tempCtx.fillRect(30, 90, 20, 30);
-        tempCtx.fillRect(70, 90, 20, 30);
+        tempCtx.fillRect(25, 75, 15, 25);
+        tempCtx.fillRect(60, 75, 15, 25);
         
         // Голова и шея
-        tempCtx.fillRect(90, 15, 25, 45);
-        tempCtx.fillRect(105, 5, 30, 30);
+        tempCtx.fillRect(75, 12, 20, 38);
+        tempCtx.fillRect(88, 5, 25, 25);
         
         // Глаз
         tempCtx.fillStyle = 'white';
-        tempCtx.fillRect(115, 12, 12, 12);
+        tempCtx.fillRect(95, 10, 10, 10);
         tempCtx.fillStyle = 'black';
-        tempCtx.fillRect(118, 15, 6, 6);
+        tempCtx.fillRect(97, 12, 6, 6);
         
         // Хвост
         tempCtx.fillStyle = '#535353';
-        tempCtx.fillRect(0, 45, 15, 12);
-        tempCtx.fillRect(6, 57, 9, 6);
+        tempCtx.fillRect(0, 40, 12, 10);
+        tempCtx.fillRect(5, 50, 7, 5);
         
         // Улыбка
         tempCtx.strokeStyle = 'white';
-        tempCtx.lineWidth = 3;
+        tempCtx.lineWidth = 2;
         tempCtx.beginPath();
-        tempCtx.arc(115, 35, 10, 0, Math.PI);
+        tempCtx.arc(95, 30, 8, 0, Math.PI);
         tempCtx.stroke();
         
         playerImg.src = tempCanvas.toDataURL();
@@ -180,51 +189,15 @@ document.addEventListener('DOMContentLoaded', function() {
         tempCanvas.height = GAME.maxCactusHeight;
         const tempCtx = tempCanvas.getContext('2d');
         
-        // Большой кактус
+        // Кактус
         tempCtx.fillStyle = '#0a0';
-        tempCtx.fillRect(12, 0, 16, GAME.maxCactusHeight);
+        tempCtx.fillRect(10, 0, 10, GAME.maxCactusHeight);
         
         // Полоски
         tempCtx.fillStyle = '#080';
-        tempCtx.fillRect(14, 15, 12, 8);
-        tempCtx.fillRect(14, 45, 12, 8);
-        tempCtx.fillRect(14, 75, 12, 8);
-        
-        // Шипы
-        tempCtx.strokeStyle = '#060';
-        tempCtx.lineWidth = 2;
-        
-        // Левые шипы
-        tempCtx.beginPath();
-        tempCtx.moveTo(12, 30);
-        tempCtx.lineTo(4, 30);
-        tempCtx.stroke();
-        
-        tempCtx.beginPath();
-        tempCtx.moveTo(12, 60);
-        tempCtx.lineTo(4, 60);
-        tempCtx.stroke();
-        
-        tempCtx.beginPath();
-        tempCtx.moveTo(12, 90);
-        tempCtx.lineTo(4, 90);
-        tempCtx.stroke();
-        
-        // Правые шипы
-        tempCtx.beginPath();
-        tempCtx.moveTo(28, 45);
-        tempCtx.lineTo(36, 45);
-        tempCtx.stroke();
-        
-        tempCtx.beginPath();
-        tempCtx.moveTo(28, 75);
-        tempCtx.lineTo(36, 75);
-        tempCtx.stroke();
-        
-        tempCtx.beginPath();
-        tempCtx.moveTo(28, 105);
-        tempCtx.lineTo(36, 105);
-        tempCtx.stroke();
+        tempCtx.fillRect(12, 15, 6, 5);
+        tempCtx.fillRect(12, 40, 6, 5);
+        tempCtx.fillRect(12, 65, 6, 5);
         
         cactusImg.src = tempCanvas.toDataURL();
     }
@@ -234,9 +207,23 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < GAME.cloudCount; i++) {
             clouds.push({
                 x: Math.random() * canvas.width,
-                y: Math.random() * 200 + 50,
-                width: Math.random() * 100 + 100,
-                speed: Math.random() * 1 + 0.5
+                y: Math.random() * 150 + 50,
+                width: Math.random() * 80 + 60,
+                speed: Math.random() * 0.5 + 0.3,
+                opacity: Math.random() * 0.3 + 0.7
+            });
+        }
+    }
+
+    function createStars() {
+        stars = [];
+        for (let i = 0; i < GAME.starCount; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height * 0.7,
+                size: Math.random() * 2 + 1,
+                brightness: Math.random() * 0.5 + 0.5,
+                twinkleSpeed: Math.random() * 0.05 + 0.02
             });
         }
     }
@@ -255,11 +242,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function resetGame() {
         score = 0;
-        gameSpeed = GAME.initialSpeed;
+        gameSpeed = GAME.initialSpeed; // Сбрасываем скорость
         obstacles = [];
         frames = 0;
         fpsFrameCount = 0;
         lastFpsUpdate = Date.now();
+        isNight = false;
+        nightTransition = 0;
         
         player.y = player.groundY;
         player.velocityY = 0;
@@ -303,26 +292,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const now = Date.now();
         if (now - lastFpsUpdate >= 1000) {
             fps = Math.round((fpsFrameCount * 1000) / (now - lastFpsUpdate));
-            fps = Math.min(fps, 3334444); // Ограничиваем максимальное значение
+            fps = Math.min(fps, 3334444);
             updateFPS();
             fpsFrameCount = 0;
             lastFpsUpdate = now;
         }
         
-        // Увеличиваем скорость
-        gameSpeed += GAME.speedIncrease;
+        // ОЧЕНЬ медленно увеличиваем скорость
+        if (frames % 100 === 0) { // Только каждый 100-й кадр
+            gameSpeed += GAME.speedIncrease;
+        }
+        
+        // Переход дня в ночь по счету
+        if (score > 500 && !isNight) {
+            nightTransition = Math.min(nightTransition + 0.01, 1);
+            if (nightTransition >= 1) {
+                isNight = true;
+            }
+        }
         
         // Обновляем игрока
         updatePlayer();
         
-        // Обновляем препятствия
+        // Обновляем препятствия (реже)
         updateObstacles();
         
         // Обновляем облака
         updateClouds();
         
         // Увеличиваем счет
-        score += Math.max(1, Math.floor(gameSpeed / 2));
+        score += 1; // Меньше очков за время
         updateScore();
         
         // Проверяем столкновения
@@ -353,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Отмечаем пройденные
             if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
                 obstacle.passed = true;
-                score += 150;
+                score += 50; // Меньше бонуса за кактус
                 scoreElement.classList.add('score-pop');
                 setTimeout(() => {
                     scoreElement.classList.remove('score-pop');
@@ -361,9 +360,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Создаем новые препятствия
-        if (frames % Math.floor(GAME.maxCactusGap / (gameSpeed * 0.5)) === 0) {
-            createObstacle();
+        // Создаем новые препятствия РЕЖЕ
+        // Только каждый 120-й кадр И если прошло достаточно времени
+        if (frames % 120 === 0 && obstacles.length < 3) {
+            // Проверяем, что последний кактус далеко
+            const lastObstacle = obstacles[obstacles.length - 1];
+            if (!lastObstacle || (canvas.width - lastObstacle.x) > GAME.minCactusGap) {
+                createObstacle();
+            }
         }
     }
 
@@ -379,15 +383,17 @@ document.addEventListener('DOMContentLoaded', function() {
             height: height,
             passed: false
         });
+        
+        console.log("🌵 Создан новый кактус. Всего кактусов:", obstacles.length);
     }
 
     function updateClouds() {
         for (let cloud of clouds) {
-            cloud.x -= cloud.speed * 0.5;
+            cloud.x -= cloud.speed * 0.3;
             
             if (cloud.x + cloud.width < 0) {
                 cloud.x = canvas.width;
-                cloud.y = Math.random() * 200 + 50;
+                cloud.y = Math.random() * 150 + 50;
             }
         }
     }
@@ -438,13 +444,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Очищаем экран
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Рисуем фон
+        // Рисуем фон (день/ночь)
         drawBackground();
         
-        // Рисуем облака
+        // Рисуем звезды (если ночь)
+        if (isNight || nightTransition > 0) {
+            drawStars();
+        }
+        
+        // Рисуем луну (если ночь)
+        if (isNight || nightTransition > 0) {
+            drawMoon();
+        }
+        
+        // Рисуем облака (прозрачнее ночью)
         drawClouds();
         
-        // Рисуем землю
+        // Рисуем землю (песок)
         drawGround();
         
         // Рисуем препятствия
@@ -455,95 +471,149 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function drawBackground() {
-        // Градиентное небо
+        // Плавный переход от дня к ночи
+        const dayColor = isNight ? 0 : 1 - nightTransition;
+        const nightColor = isNight ? 1 : nightTransition;
+        
+        // Градиентное небо с переходом
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.7);
-        gradient.addColorStop(0, '#87CEEB');
-        gradient.addColorStop(1, '#E0F7FF');
+        
+        // Дневные цвета
+        const dayTop = `rgba(${135 + 120 * nightColor}, ${206 - 106 * nightColor}, ${235 - 135 * nightColor}, 1)`;
+        const dayBottom = `rgba(${224 - 124 * nightColor}, ${247 - 107 * nightColor}, ${255 - 155 * nightColor}, 1)`;
+        
+        // Ночные цвета
+        const nightTop = `rgba(${15 + 120 * dayColor}, ${30 + 176 * dayColor}, ${100 + 135 * dayColor}, 1)`;
+        const nightBottom = `rgba(${100 + 124 * dayColor}, ${140 + 107 * dayColor}, ${100 + 155 * dayColor}, 1)`;
+        
+        // Смешиваем цвета
+        gradient.addColorStop(0, isNight ? nightTop : dayTop);
+        gradient.addColorStop(1, isNight ? nightBottom : dayBottom);
+        
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Солнце
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.arc(canvas.width - 100, 100, 60, 0, Math.PI * 2);
-        ctx.fill();
+        // Солнце/Луна
+        if (!isNight && nightTransition < 0.5) {
+            // Солнце (исчезает при переходе к ночи)
+            const sunOpacity = Math.max(0, 1 - nightTransition * 2);
+            if (sunOpacity > 0) {
+                ctx.fillStyle = `rgba(255, 215, 0, ${sunOpacity})`;
+                ctx.beginPath();
+                ctx.arc(canvas.width - 100, 100, 50 * sunOpacity, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+
+    function drawStars() {
+        const opacity = isNight ? 1 : nightTransition;
         
-        // Лучи солнца
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
-        ctx.lineWidth = 4;
-        for (let i = 0; i < 12; i++) {
-            const angle = (i * Math.PI) / 6;
+        for (let star of stars) {
+            // Мерцание звезд
+            const twinkle = Math.sin(frames * star.twinkleSpeed) * 0.3 + 0.7;
+            
+            ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness * twinkle * opacity})`;
             ctx.beginPath();
-            ctx.moveTo(
-                canvas.width - 100 + Math.cos(angle) * 70,
-                100 + Math.sin(angle) * 70
-            );
-            ctx.lineTo(
-                canvas.width - 100 + Math.cos(angle) * 100,
-                100 + Math.sin(angle) * 100
-            );
-            ctx.stroke();
+            ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Большие звезды имеют лучи
+            if (star.size > 1.5 && opacity > 0.5) {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 * twinkle * opacity})`;
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 4; i++) {
+                    const angle = (i * Math.PI) / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(
+                        star.x + Math.cos(angle) * star.size,
+                        star.y + Math.sin(angle) * star.size
+                    );
+                    ctx.lineTo(
+                        star.x + Math.cos(angle) * (star.size * 3),
+                        star.y + Math.sin(angle) * (star.size * 3)
+                    );
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    function drawMoon() {
+        const opacity = isNight ? 1 : nightTransition;
+        if (opacity > 0) {
+            // Луна
+            ctx.fillStyle = `rgba(255, 255, 220, ${opacity})`;
+            ctx.beginPath();
+            ctx.arc(canvas.width - 150, 120, GAME.moonSize * opacity, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Кратеры на луне
+            ctx.fillStyle = `rgba(200, 200, 200, ${0.5 * opacity})`;
+            ctx.beginPath();
+            ctx.arc(canvas.width - 170, 100, 12 * opacity, 0, Math.PI * 2);
+            ctx.arc(canvas.width - 130, 150, 15 * opacity, 0, Math.PI * 2);
+            ctx.arc(canvas.width - 150, 130, 8 * opacity, 0, Math.PI * 2);
+            ctx.fill();
         }
     }
 
     function drawClouds() {
+        const cloudOpacity = isNight ? 0.3 : 0.8;
+        
         for (let cloud of clouds) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillStyle = `rgba(255, 255, 255, ${cloud.opacity * cloudOpacity})`;
             
-            // Большие пушистые облака
+            // Пушистые облака
             ctx.beginPath();
-            ctx.arc(cloud.x + 30, cloud.y, 25, 0, Math.PI * 2);
-            ctx.arc(cloud.x + 60, cloud.y - 15, 35, 0, Math.PI * 2);
-            ctx.arc(cloud.x + 90, cloud.y, 25, 0, Math.PI * 2);
-            ctx.arc(cloud.x + 60, cloud.y + 15, 20, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 20, cloud.y, 20, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 40, cloud.y - 10, 25, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 60, cloud.y, 20, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 40, cloud.y + 10, 18, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 
     function drawGround() {
-        // Земля
-        ctx.fillStyle = '#8B4513';
+        // ЖЕЛТЫЙ ПЕСОК
+        const sandColor = isNight ? '#8B7500' : '#F4A460'; // Темнее ночью
+        
+        // Основной песок
+        ctx.fillStyle = sandColor;
         ctx.fillRect(0, canvas.height - GAME.groundHeight, canvas.width, GAME.groundHeight);
         
-        // Трава сверху
-        ctx.fillStyle = '#228B22';
-        ctx.fillRect(0, canvas.height - GAME.groundHeight, canvas.width, 5);
-        
-        // Текстура земли
-        ctx.fillStyle = '#A0522D';
-        for (let i = 0; i < canvas.width; i += 50) {
-            ctx.fillRect(i, canvas.height - GAME.groundHeight + 5, 3, GAME.groundHeight - 5);
+        // Текстура песка (волны)
+        ctx.fillStyle = isNight ? '#DAA520' : '#DEB887'; // Светлее для текстуры
+        for (let i = 0; i < canvas.width; i += 40) {
+            const waveHeight = Math.sin((frames * 0.02) + (i * 0.01)) * 3 + 3;
+            ctx.fillRect(
+                i, 
+                canvas.height - GAME.groundHeight, 
+                30, 
+                waveHeight
+            );
         }
+        
+        // Тень от объектов на песке
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillRect(0, canvas.height - GAME.groundHeight, canvas.width, 2);
     }
 
     function drawPlayer() {
-        // Рисуем картинку игрока (очень большую)
+        // Рисуем картинку игрока
         ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
         
         // Тень под игроком
-        if (player.isJumping) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.beginPath();
-            ctx.ellipse(
-                player.x + player.width/2,
-                canvas.height - GAME.groundHeight,
-                player.width/3,
-                8,
-                0, 0, Math.PI * 2
-            );
-            ctx.fill();
-        }
-        
-        // Если пригнулся
-        if (player.isDucking) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.fillRect(
-                player.x + 20,
-                player.y + player.height - 15,
-                player.width - 40,
-                10
-            );
-        }
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.beginPath();
+        ctx.ellipse(
+            player.x + player.width/2,
+            canvas.height - GAME.groundHeight,
+            player.width/4,
+            6,
+            0, 0, Math.PI * 2
+        );
+        ctx.fill();
     }
 
     function drawObstacles() {
@@ -558,29 +628,26 @@ document.addEventListener('DOMContentLoaded', function() {
             );
             
             // Тень под кактусом
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(
                 obstacle.x + 5,
                 canvas.height - GAME.groundHeight,
                 obstacle.width - 10,
-                10
+                8
             );
             
-            // Колючки эффект
-            ctx.strokeStyle = '#060';
-            ctx.lineWidth = 1;
-            for (let i = 0; i < 3; i++) {
-                const y = obstacle.y + 20 + i * 30;
-                if (y < obstacle.y + obstacle.height - 10) {
-                    ctx.beginPath();
-                    ctx.moveTo(obstacle.x, y);
-                    ctx.lineTo(obstacle.x - 8, y);
-                    ctx.stroke();
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(obstacle.x + obstacle.width, y + 15);
-                    ctx.lineTo(obstacle.x + obstacle.width + 8, y + 15);
-                    ctx.stroke();
+            // Колючки (только видны днем)
+            if (!isNight || nightTransition < 0.5) {
+                ctx.strokeStyle = '#060';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 3; i++) {
+                    const y = obstacle.y + 15 + i * 25;
+                    if (y < obstacle.y + obstacle.height - 10) {
+                        ctx.beginPath();
+                        ctx.moveTo(obstacle.x, y);
+                        ctx.lineTo(obstacle.x - 6, y);
+                        ctx.stroke();
+                    }
                 }
             }
         }
@@ -589,6 +656,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
     function updateScore() {
         scoreElement.textContent = formatNumber(score);
+        
+        // Индикатор ночного режима
+        if (isNight || nightTransition > 0) {
+            scoreElement.style.textShadow = '0 0 10px #87CEEB';
+        } else {
+            scoreElement.style.textShadow = '0 0 10px #4CAF50';
+        }
     }
 
     function updateHighScore() {
@@ -598,7 +672,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateFPS() {
         fpsElement.textContent = formatNumber(fps);
         
-        // Эффект при изменении FPS
+        // Цвет FPS в зависимости от значения
         if (fps < 30) {
             fpsElement.style.color = '#ff4444';
         } else if (fps < 50) {
@@ -639,6 +713,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!gameRunning && gameOverScreen.style.display === 'flex') {
                         startGame();
                     }
+                    break;
+                case 'KeyN':
+                    // Переключение дня/ночи (для теста)
+                    isNight = !isNight;
+                    nightTransition = isNight ? 1 : 0;
                     break;
             }
         });

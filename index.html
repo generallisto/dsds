@@ -3,589 +3,841 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новогодний Динозаврик</title>
+    <title>Динозаврик Chrome - с моей картинкой</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #0c2e4e 0%, #1a1a2e 100%);
-            color: #fff;
+            background-color: #f1f1f1;
+            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 15px;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* Снежинки */
-        .snowflake {
-            position: absolute;
-            background-color: white;
-            border-radius: 50%;
-            opacity: 0.8;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        /* Контейнер игры */
-        .game-container {
-            width: 100%;
-            max-width: 800px;
-            background-color: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
             padding: 20px;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 1;
+            color: #333;
         }
 
-        /* Заголовок */
-        header {
+        .container {
+            max-width: 600px;
+            width: 100%;
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 8px;
-            background: linear-gradient(90deg, #FFD700, #FFA500, #FF6347);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            margin-bottom: 10px;
+            color: #444;
+            font-size: 24px;
         }
 
         .subtitle {
-            color: #b0e0e6;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-        }
-
-        /* Статистика */
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
+            color: #666;
             margin-bottom: 20px;
-            gap: 10px;
+            font-size: 14px;
         }
 
-        .stat-box {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 12px 15px;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .stat-title {
-            font-size: 0.9rem;
-            color: #b0e0e6;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-
-        /* Игровое поле */
         .game-area {
             position: relative;
-            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         #gameCanvas {
-            width: 100%;
-            border: 3px solid #4a90e2;
-            border-radius: 12px;
-            background-color: #0a1929;
+            border: 2px solid #ddd;
+            background-color: #fff;
             display: block;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            margin: 0 auto;
+            cursor: pointer;
         }
 
-        /* Экран окончания игры */
         .game-over {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
+            background-color: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 30px 40px;
-            border-radius: 20px;
+            border-radius: 10px;
             text-align: center;
             display: none;
             z-index: 10;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-            border: 3px solid #FFD700;
-            width: 90%;
-            max-width: 450px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { border-color: #FFD700; }
-            50% { border-color: #FF6347; }
-            100% { border-color: #FFD700; }
         }
 
         .game-over h2 {
-            font-size: 2.5rem;
+            font-size: 28px;
             margin-bottom: 15px;
-            color: #FF6347;
-            text-shadow: 0 0 15px rgba(255, 99, 71, 0.7);
+            color: #ff4444;
         }
 
         .game-over p {
-            font-size: 1.4rem;
-            margin-bottom: 25px;
-            color: #FFD700;
+            font-size: 18px;
+            margin-bottom: 20px;
         }
 
-        /* Управление */
         .controls {
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-top: 20px;
             flex-wrap: wrap;
         }
 
-        .btn {
-            padding: 14px 25px;
-            font-size: 1.1rem;
-            font-weight: bold;
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            min-width: 160px;
-            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
+            transition: background-color 0.3s;
+            font-weight: bold;
         }
 
-        .btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        button:hover {
+            background-color: #45a049;
         }
 
-        .btn-start {
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-            color: white;
+        #jumpBtn {
+            display: none;
         }
 
-        .btn-jump {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            display: none; /* По умолчанию скрыта для ПК */
+        #restartBtn {
+            background-color: #2196F3;
         }
 
-        .btn-reset {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
+        #restartBtn:hover {
+            background-color: #0b7dda;
         }
 
-        .btn-restart {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-            color: white;
-            margin-top: 15px;
-            width: 100%;
+        .score-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
         }
 
-        /* Инструкции */
+        .score-box {
+            flex: 1;
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
         .instructions {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 15px;
-            border-left: 4px solid #3498db;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: left;
         }
 
         .instructions h3 {
-            color: #FFD700;
-            margin-bottom: 12px;
-            font-size: 1.3rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            margin-bottom: 10px;
+            color: #444;
         }
 
         .instructions ul {
-            list-style-type: none;
-            padding-left: 5px;
+            padding-left: 20px;
         }
 
         .instructions li {
-            margin-bottom: 10px;
-            padding-left: 28px;
-            position: relative;
-            color: #e0f7ff;
-            line-height: 1.4;
-        }
-
-        .instructions li:before {
-            content: "🎄";
-            position: absolute;
-            left: 0;
-            color: #27ae60;
+            margin-bottom: 8px;
         }
 
         .key {
             display: inline-block;
-            background: rgba(255, 255, 255, 0.15);
+            background-color: #333;
             color: white;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: bold;
-            margin: 0 3px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 3px 8px;
+            border-radius: 3px;
             font-family: monospace;
+            font-size: 12px;
         }
 
-        /* Уведомление о картинке */
         .image-notice {
-            background: rgba(255, 193, 7, 0.15);
-            color: #FFD700;
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 15px;
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        /* Индикатор мобильного управления */
-        .mobile-indicator {
-            display: none;
-            text-align: center;
-            color: #3498db;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        /* Футер */
-        footer {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            margin-top: 15px;
-            font-size: 0.8rem;
-            width: 100%;
-            max-width: 800px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
             padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 13px;
         }
 
-        /* Адаптивность */
+        /* Мобильная версия */
         @media (max-width: 768px) {
-            .game-container {
-                padding: 15px;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .subtitle {
-                font-size: 1rem;
-            }
-            
-            .stats {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .stat-box {
+            .container {
                 padding: 10px;
             }
             
-            .stat-value {
-                font-size: 1.7rem;
-            }
-            
-            .btn {
-                min-width: 140px;
-                padding: 12px 20px;
-                font-size: 1rem;
-            }
-            
-            .btn-jump {
-                display: block; /* Показываем кнопку прыжка на мобильных */
-                order: -1; /* Ставим кнопку прыжка первой */
+            #gameCanvas {
                 width: 100%;
-                max-width: 300px;
-                margin-bottom: 10px;
-                padding: 16px;
-                font-size: 1.2rem;
+                max-width: 100%;
             }
             
-            .mobile-indicator {
+            #jumpBtn {
                 display: block;
-            }
-            
-            .instructions li .desktop-only {
-                display: none;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.7rem;
-            }
-            
-            .game-over {
-                padding: 20px;
-            }
-            
-            .game-over h2 {
-                font-size: 2rem;
-            }
-            
-            .btn {
                 width: 100%;
-                max-width: none;
+                padding: 15px;
+                font-size: 18px;
+                background-color: #ff9800;
+            }
+            
+            #jumpBtn:hover {
+                background-color: #f57c00;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Снежинки будут созданы через JavaScript -->
-    
-    <div class="game-container">
-        <header>
-            <h1>🎄 Новогодний Динозаврик 🎅</h1>
-            <p class="subtitle">Прыгайте через ёлки и собирайте подарки!</p>
-        </header>
+    <div class="container">
+        <h1>Динозаврик Chrome</h1>
+        <p class="subtitle">Используйте вашу картинку вместо динозаврика</p>
         
-        <div class="stats">
-            <div class="stat-box">
-                <div class="stat-title">СЧЕТ</div>
-                <div id="score" class="stat-value">0</div>
+        <div class="score-container">
+            <div class="score-box">
+                <div class="score-label">СЧЕТ</div>
+                <div id="score" class="score-value">0</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-title">РЕКОРД</div>
-                <div id="highScore" class="stat-value">0</div>
+            <div class="score-box">
+                <div class="score-label">РЕКОРД</div>
+                <div id="highScore" class="score-value">0</div>
             </div>
-            <div class="stat-box">
-                <div class="stat-title">СКОРОСТЬ</div>
-                <div id="speed" class="stat-value">1.0x</div>
+            <div class="score-box">
+                <div class="score-label">СКОРОСТЬ</div>
+                <div id="speed" class="score-value">1.0x</div>
             </div>
         </div>
         
         <div class="game-area">
-            <canvas id="gameCanvas" width="800" height="350"></canvas>
+            <canvas id="gameCanvas" width="600" height="150"></canvas>
             <div id="gameOver" class="game-over">
-                <h2>🎮 ИГРА ОКОНЧЕНА 🎮</h2>
+                <h2>ИГРА ОКОНЧЕНА</h2>
                 <p>Ваш счет: <span id="finalScore">0</span></p>
-                <button id="restartBtn" class="btn btn-restart">ИГРАТЬ СНОВА</button>
+                <button id="restartBtn">ИГРАТЬ СНОВА</button>
             </div>
         </div>
         
-        <div class="mobile-indicator">
-            На мобильном устройстве используйте кнопку "ПРЫГНУТЬ"
-        </div>
-        
         <div class="controls">
-            <button id="startBtn" class="btn btn-start">🎮 НАЧАТЬ ИГРУ</button>
-            <button id="jumpBtn" class="btn btn-jump">⬆ ПРЫГНУТЬ ⬆</button>
-            <button id="resetBtn" class="btn btn-reset">🔄 СБРОСИТЬ</button>
+            <button id="startBtn">НАЧАТЬ ИГРУ (ПРОБЕЛ)</button>
+            <button id="jumpBtn">ПРЫГНУТЬ</button>
+            <button id="resetBtn">СБРОСИТЬ ИГРУ</button>
         </div>
         
         <div class="image-notice">
-            <strong>🎁 Внимание:</strong> Игра использует изображение из папки <strong>images/othcim.jpg</strong>
+            <strong>Примечание:</strong> Для использования вашей картинки поместите файл <strong>othcim.jpg</strong> в папку <strong>images</strong> рядом с этим файлом.
+            Если изображение не найдено, будет использован стандартный динозаврик.
         </div>
         
         <div class="instructions">
-            <h3>🎯 Как играть:</h3>
+            <h3>Как играть:</h3>
             <ul>
-                <li><span class="desktop-only">Нажмите <span class="key">ПРОБЕЛ</span> или </span>кнопку <strong>"ПРЫГНУТЬ"</strong> для прыжка</li>
-                <li><span class="desktop-only">Нажмите <span class="key">СТРЕЛКУ ВНИЗ</span> для приседания</span></li>
-                <li>Избегайте новогодних ёлок</li>
-                <li>Собирайте подарки для бонусных очков</li>
-                <li>Скорость увеличивается каждые 50 очков</li>
-                <li><span class="desktop-only">Для начала игры нажмите <span class="key">ПРОБЕЛ</span></span></li>
+                <li>Нажмите <span class="key">ПРОБЕЛ</span> или кнопку <strong>"НАЧАТЬ ИГРУ"</strong> для старта</li>
+                <li>Нажимайте <span class="key">ПРОБЕЛ</span> или <span class="key">СТРЕЛКУ ВВЕРХ</span> чтобы прыгать через кактусы</li>
+                <li>Нажмите <span class="key">СТРЕЛКУ ВНИЗ</span> чтобы пригнуться</li>
+                <li>Игра ускоряется с ростом счета</li>
+                <li>На мобильном устройстве используйте кнопку "ПРЫГНУТЬ"</li>
             </ul>
         </div>
     </div>
-    
-    <footer>
-        Новогодний динозаврик | Для GitHub Pages | Изображение: images/othcim.jpg
-    </footer>
 
     <script>
-        // Получаем элементы DOM
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
-        const highScoreElement = document.getElementById('highScore');
-        const speedElement = document.getElementById('speed');
-        const startBtn = document.getElementById('startBtn');
-        const jumpBtn = document.getElementById('jumpBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const restartBtn = document.getElementById('restartBtn');
-        const gameOverScreen = document.getElementById('gameOver');
-        const finalScoreElement = document.getElementById('finalScore');
-
-        // Игровые переменные
-        let gameRunning = false;
-        let gameSpeed = 1.0;
-        let score = 0;
-        let highScore = localStorage.getItem('newYearDinoHighScore') || 0;
-        let frames = 0;
-        let snowflakes = [];
-        
-        // Загружаем изображение игрока из папки images
-        const playerImg = new Image();
-        playerImg.src = 'images/othcim.jpg';
-        
-        // Если изображение не загружено, используем запасной вариант
-        playerImg.onerror = function() {
-            console.log("Изображение 'images/othcim.jpg' не найдено. Используется запасной вариант.");
-            // Создаем новогодний запасной вариант
-            createFallbackImage();
+        // ========== НАСТРОЙКИ ИГРЫ ==========
+        const GAME_SETTINGS = {
+            canvasWidth: 600,
+            canvasHeight: 150,
+            groundHeight: 10,
+            groundY: 140, // Y координата земли
+            playerStartX: 50,
+            playerWidth: 40,
+            playerHeight: 40,
+            playerJumpForce: 12,
+            gravity: 0.6,
+            initialSpeed: 5,
+            speedIncrease: 0.001,
+            cactusWidth: 20,
+            minCactusHeight: 30,
+            maxCactusHeight: 50,
+            minCactusGap: 200,
+            maxCactusGap: 400,
+            cloudCount: 3,
+            gameOverScoreDelay: 1000
         };
+
+        // ========== ПЕРЕМЕННЫЕ ИГРЫ ==========
+        let canvas, ctx;
+        let gameRunning = false;
+        let gameSpeed = GAME_SETTINGS.initialSpeed;
+        let score = 0;
+        let highScore = localStorage.getItem('dinoHighScore') || 0;
+        let frames = 0;
+        let gameLoopId = null;
         
-        // Функция создания запасного изображения
-        function createFallbackImage() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 60;
-            canvas.height = 60;
-            const ctx = canvas.getContext('2d');
-            
-            // Фон
-            ctx.fillStyle = '#3498db';
-            ctx.fillRect(0, 0, 60, 60);
-            ctx.strokeStyle = '#2980b9';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(2, 2, 56, 56);
-            
-            // Глаза
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.arc(20, 20, 8, 0, Math.PI * 2);
-            ctx.arc(40, 20, 8, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = 'black';
-            ctx.beginPath();
-            ctx.arc(20, 20, 4, 0, Math.PI * 2);
-            ctx.arc(40, 20, 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Улыбка
-            ctx.beginPath();
-            ctx.arc(30, 30, 12, 0, Math.PI, false);
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            // Новогодняя шапка
-            ctx.fillStyle = '#e74c3c';
-            ctx.beginPath();
-            ctx.moveTo(15, 5);
-            ctx.lineTo(45, 5);
-            ctx.lineTo(40, 15);
-            ctx.lineTo(20, 15);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Помпон
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.arc(30, 5, 5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Текст
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 10px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('YOU', 30, 52);
-            
-            playerImg.src = canvas.toDataURL();
-        }
-        
-        // Загружаем изображение подарка
-        const giftImg = new Image();
-        giftImg.src = 'data:image/svg+xml;base64,' + btoa(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
-                <rect x="10" y="20" width="30" height="20" fill="#e74c3c"/>
-                <rect x="10" y="15" width="30" height="5" fill="#2ecc71"/>
-                <rect x="22" y="5" width="6" height="15" fill="#f1c40f"/>
-                <rect x="10" y="20" width="30" height="5" fill="#f1c40f"/>
-                <rect x="15" y="25" width="5" height="5" fill="#3498db"/>
-                <rect x="30" y="25" width="5" height="5" fill="#3498db"/>
-                <rect x="22" y="30" width="6" height="5" fill="#9b59b6"/>
-            </svg>
-        `);
-        
-        // Позиция игрока
-        const player = {
-            x: 80,
-            y: 0,
-            width: 60,
-            height: 60,
+        // Объекты игры
+        let player = {
+            x: GAME_SETTINGS.playerStartX,
+            y: GAME_SETTINGS.groundY - GAME_SETTINGS.playerHeight,
+            width: GAME_SETTINGS.playerWidth,
+            height: GAME_SETTINGS.playerHeight,
             velocityY: 0,
-            gravity: 0.5,
-            jumpForce: -12,
             isJumping: false,
             isDucking: false,
-            groundY: canvas.height - 80, // Позиция "земли"
-            
-            jump() {
-                if (!this.isJumping) {
-                    this.velocityY = this.jumpForce;
-                    this.isJumping = true;
-                }
-            },
-            
-            duck(isDucking) {
-                this.isDucking = isDucking;
-                this.height = isDucking ? 40 : 60;
-                this.y = isDucking ? this.groundY + 20 : this.groundY - this.height;
-            },
-            
-            update() {
-                this.velocityY += this.gravity;
-                this.y += this.velocityY;
-                
-                if (this.y > this.groundY - this.height) {
-                    this.y = this.groundY - this.height;
-                    this.velocityY = 0;
-                    this.isJumping = false;
-                }
-            },
-            
-            draw() {
-                ctx.drawImage(playerImg, this.x, this.y, this.width, this.height);
-            },
-            
-            reset() {
-                this.y = this.groundY - this.height;
-                this.velocityY = 0;
-                this.isJumping = false;
-                this.isDucking = false;
-                this.height = 60;
-            }
+            duckHeight: 25
         };
+        
+        let obstacles = [];
+        let clouds = [];
+        
+        // Изображения
+        let playerImg = new Image();
+        let cactusImg = null;
+        
+        // ========== DOM ЭЛЕМЕНТЫ ==========
+        let scoreElement, highScoreElement, speedElement;
+        let startBtn, jumpBtn, resetBtn, restartBtn;
+        let gameOverScreen, finalScoreElement;
 
-        // Препятствия (ёлк
+        // ========== ИНИЦИАЛИЗАЦИЯ ИГРЫ ==========
+        function init() {
+            // Получаем элементы DOM
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            scoreElement = document.getElementById('score');
+            highScoreElement = document.getElementById('highScore');
+            speedElement = document.getElementById('speed');
+            startBtn = document.getElementById('startBtn');
+            jumpBtn = document.getElementById('jumpBtn');
+            resetBtn = document.getElementById('resetBtn');
+            restartBtn = document.getElementById('restartBtn');
+            gameOverScreen = document.getElementById('gameOver');
+            finalScoreElement = document.getElementById('finalScore');
+            
+            // Загружаем картинку игрока
+            playerImg.src = 'images/othcim.jpg';
+            playerImg.onerror = function() {
+                console.log("Изображение не найдено. Создаю стандартного динозаврика...");
+                createDefaultPlayerImage();
+            };
+            
+            // Создаем изображение кактуса
+            createCactusImage();
+            
+            // Создаем облака
+            createClouds();
+            
+            // Устанавливаем начальные значения
+            highScoreElement.textContent = highScore;
+            
+            // Настройка канваса
+            canvas.width = GAME_SETTINGS.canvasWidth;
+            canvas.height = GAME_SETTINGS.canvasHeight;
+            
+            // Назначаем обработчики событий
+            setupEventListeners();
+            
+            // Проверяем мобильное устройство
+            checkMobileDevice();
+            
+            // Начинаем игровой цикл
+            gameLoop();
+            
+            // Рисуем начальный экран
+            drawStartScreen();
+        }
+
+        // ========== СОЗДАНИЕ ИЗОБРАЖЕНИЙ ==========
+        function createDefaultPlayerImage() {
+            // Создаем стандартного динозаврика как в Chrome
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = GAME_SETTINGS.playerWidth;
+            tempCanvas.height = GAME_SETTINGS.playerHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Тело динозаврика (серый прямоугольник)
+            tempCtx.fillStyle = '#535353';
+            tempCtx.fillRect(5, 10, 30, 20);
+            
+            // Ноги
+            tempCtx.fillRect(10, 30, 6, 10);
+            tempCtx.fillRect(24, 30, 6, 10);
+            
+            // Голова и шея
+            tempCtx.fillRect(30, 5, 8, 15);
+            tempCtx.fillRect(35, 2, 10, 10);
+            
+            // Глаз
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(38, 4, 4, 4);
+            tempCtx.fillStyle = 'black';
+            tempCtx.fillRect(39, 5, 2, 2);
+            
+            // Хвост
+            tempCtx.fillStyle = '#535353';
+            tempCtx.fillRect(0, 15, 5, 4);
+            tempCtx.fillRect(2, 19, 3, 2);
+            
+            playerImg.src = tempCanvas.toDataURL();
+        }
+
+        function createCactusImage() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = GAME_SETTINGS.cactusWidth;
+            tempCanvas.height = GAME_SETTINGS.maxCactusHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Зеленый кактус
+            tempCtx.fillStyle = '#0a0';
+            tempCtx.fillRect(5, 0, 10, GAME_SETTINGS.maxCactusHeight);
+            
+            // Полоски на кактусе
+            tempCtx.fillStyle = '#080';
+            tempCtx.fillRect(7, 5, 6, 3);
+            tempCtx.fillRect(7, 15, 6, 3);
+            tempCtx.fillRect(7, 25, 6, 3);
+            
+            // Шипы
+            tempCtx.strokeStyle = '#060';
+            tempCtx.lineWidth = 1;
+            
+            // Левые шипы
+            tempCtx.beginPath();
+            tempCtx.moveTo(5, 10);
+            tempCtx.lineTo(2, 10);
+            tempCtx.stroke();
+            
+            tempCtx.beginPath();
+            tempCtx.moveTo(5, 20);
+            tempCtx.lineTo(2, 20);
+            tempCtx.stroke();
+            
+            tempCtx.beginPath();
+            tempCtx.moveTo(5, 30);
+            tempCtx.lineTo(2, 30);
+            tempCtx.stroke();
+            
+            // Правые шипы
+            tempCtx.beginPath();
+            tempCtx.moveTo(15, 15);
+            tempCtx.lineTo(18, 15);
+            tempCtx.stroke();
+            
+            tempCtx.beginPath();
+            tempCtx.moveTo(15, 25);
+            tempCtx.lineTo(18, 25);
+            tempCtx.stroke();
+            
+            tempCtx.beginPath();
+            tempCtx.moveTo(15, 35);
+            tempCtx.lineTo(18, 35);
+            tempCtx.stroke();
+            
+            cactusImg = tempCanvas;
+        }
+
+        // ========== СОЗДАНИЕ ОБЛАКОВ ==========
+        function createClouds() {
+            clouds = [];
+            for (let i = 0; i < GAME_SETTINGS.cloudCount; i++) {
+                clouds.push({
+                    x: Math.random() * GAME_SETTINGS.canvasWidth,
+                    y: Math.random() * 50 + 20,
+                    width: Math.random() * 30 + 40,
+                    speed: Math.random() * 0.5 + 0.2
+                });
+            }
+        }
+
+        // ========== ИГРОВАЯ ЛОГИКА ==========
+        function startGame() {
+            if (gameRunning) return;
+            
+            resetGame();
+            gameRunning = true;
+            startBtn.textContent = "ПАУЗА (ПРОБЕЛ)";
+            gameOverScreen.style.display = 'none';
+        }
+
+        function togglePause() {
+            if (!gameRunning) return;
+            gameRunning = !gameRunning;
+            startBtn.textContent = gameRunning ? "ПАУЗА (ПРОБЕЛ)" : "ПРОДОЛЖИТЬ (ПРОБЕЛ)";
+        }
+
+        function resetGame() {
+            score = 0;
+            gameSpeed = GAME_SETTINGS.initialSpeed;
+            obstacles = [];
+            frames = 0;
+            
+            player.y = GAME_SETTINGS.groundY - GAME_SETTINGS.playerHeight;
+            player.velocityY = 0;
+            player.isJumping = false;
+            player.isDucking = false;
+            player.height = GAME_SETTINGS.playerHeight;
+            
+            updateScore();
+            speedElement.textContent = gameSpeed.toFixed(1) + 'x';
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            startBtn.textContent = "НАЧАТЬ ЗАНОВО (ПРОБЕЛ)";
+            
+            // Обновляем рекорд
+            if (score > highScore) {
+                highScore = score;
+                highScoreElement.textContent = highScore;
+                localStorage.setItem('dinoHighScore', highScore);
+            }
+            
+            // Показываем экран Game Over
+            finalScoreElement.textContent = score;
+            
+            // Задержка перед показом экрана Game Over
+            setTimeout(() => {
+                gameOverScreen.style.display = 'block';
+            }, 500);
+        }
+
+        // ========== ОБНОВЛЕНИЕ ИГРОВОГО СОСТОЯНИЯ ==========
+        function update() {
+            if (!gameRunning) return;
+            
+            frames++;
+            
+            // Увеличиваем скорость со временем
+            gameSpeed += GAME_SETTINGS.speedIncrease;
+            speedElement.textContent = gameSpeed.toFixed(1) + 'x';
+            
+            // Обновляем игрока
+            updatePlayer();
+            
+            // Обновляем препятствия
+            updateObstacles();
+            
+            // Обновляем облака
+            updateClouds();
+            
+            // Увеличиваем счет
+            score += 1;
+            updateScore();
+            
+            // Проверяем столкновения
+            checkCollisions();
+        }
+
+        function updatePlayer() {
+            // Применяем гравитацию
+            if (player.isJumping) {
+                player.velocityY -= GAME_SETTINGS.gravity;
+                player.y -= player.velocityY;
+                
+                // Проверяем, достиг ли игрок земли
+                if (player.y >= GAME_SETTINGS.groundY - player.height) {
+                    player.y = GAME_SETTINGS.groundY - player.height;
+                    player.isJumping = false;
+                    player.velocityY = 0;
+                }
+            }
+        }
+
+        function updateObstacles() {
+            // Удаляем препятствия, которые ушли за экран
+            obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+            
+            // Двигаем препятствия
+            for (let obstacle of obstacles) {
+                obstacle.x -= gameSpeed;
+                
+                // Отмечаем пройденные препятствия
+                if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
+                    obstacle.passed = true;
+                    score += 100; // Бонус за пройденное препятствие
+                }
+            }
+            
+            // Создаем новые препятствия
+            if (frames % Math.floor((GAME_SETTINGS.maxCactusGap - frames * 0.1) / gameSpeed) === 0) {
+                createObstacle();
+            }
+        }
+
+        function createObstacle() {
+            const height = Math.floor(Math.random() * 
+                (GAME_SETTINGS.maxCactusHeight - GAME_SETTINGS.minCactusHeight)) + 
+                GAME_SETTINGS.minCactusHeight;
+            
+            obstacles.push({
+                x: GAME_SETTINGS.canvasWidth,
+                y: GAME_SETTINGS.groundY - height,
+                width: GAME_SETTINGS.cactusWidth,
+                height: height,
+                passed: false
+            });
+        }
+
+        function updateClouds() {
+            for (let cloud of clouds) {
+                cloud.x -= cloud.speed;
+                
+                // Если облако ушло за экран, перемещаем его в начало
+                if (cloud.x + cloud.width < 0) {
+                    cloud.x = GAME_SETTINGS.canvasWidth;
+                    cloud.y = Math.random() * 50 + 20;
+                }
+            }
+        }
+
+        function checkCollisions() {
+            for (let obstacle of obstacles) {
+                if (checkCollision(player, obstacle)) {
+                    gameOver();
+                    return;
+                }
+            }
+        }
+
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        // ========== ОТРИСОВКА ==========
+        function draw() {
+            // Очищаем канвас
+            ctx.clearRect(0, 0, GAME_SETTINGS.canvasWidth, GAME_SETTINGS.canvasHeight);
+            
+            // Рисуем фон (небо)
+            ctx.fillStyle = '#f7f7f7';
+            ctx.fillRect(0, 0, GAME_SETTINGS.canvasWidth, GAME_SETTINGS.canvasHeight);
+            
+            // Рисуем облака
+            drawClouds();
+            
+            // Рисуем землю
+            drawGround();
+            
+            // Рисуем игрока
+            drawPlayer();
+            
+            // Рисуем препятствия
+            drawObstacles();
+            
+            // Если игра не запущена, рисуем инструкцию
+            if (!gameRunning && obstacles.length === 0) {
+                drawStartScreen();
+            }
+        }
+
+        function drawStartScreen() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, GAME_SETTINGS.canvasWidth, GAME_SETTINGS.canvasHeight);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('ДИНОЗАВРИК', GAME_SETTINGS.canvasWidth / 2, 50);
+            
+            ctx.font = '16px Arial';
+            ctx.fillText('Нажмите ПРОБЕЛ чтобы начать', GAME_SETTINGS.canvasWidth / 2, 80);
+            
+            ctx.font = '14px Arial';
+            ctx.fillText('ПРОБЕЛ или СТРЕЛКА ВВЕРХ - прыжок', GAME_SETTINGS.canvasWidth / 2, 110);
+            ctx.fillText('СТРЕЛКА ВНИЗ - пригнуться', GAME_SETTINGS.canvasWidth / 2, 130);
+        }
+
+        function drawGround() {
+            // Земля
+            ctx.fillStyle = '#535353';
+            ctx.fillRect(0, GAME_SETTINGS.groundY, GAME_SETTINGS.canvasWidth, GAME_SETTINGS.groundHeight);
+            
+            // Линия горизонта
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, GAME_SETTINGS.groundY);
+            ctx.lineTo(GAME_SETTINGS.canvasWidth, GAME_SETTINGS.groundY);
+            ctx.stroke();
+        }
+
+        function drawClouds() {
+            for (let cloud of clouds) {
+                ctx.fillStyle = '#f0f0f0';
+                
+                // Рисуем пушистое облако
+                ctx.beginPath();
+                ctx.arc(cloud.x + 10, cloud.y, 8, 0, Math.PI * 2);
+                ctx.arc(cloud.x + 20, cloud.y - 5, 10, 0, Math.PI * 2);
+                ctx.arc(cloud.x + 30, cloud.y, 8, 0, Math.PI * 2);
+                ctx.arc(cloud.x + 20, cloud.y + 5, 7, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawPlayer() {
+            // Рисуем картинку игрока
+            ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+            
+            // Если игрок пригнулся, рисуем дополнительную линию
+            if (player.isDucking) {
+                ctx.fillStyle = '#535353';
+                ctx.fillRect(player.x + 5, player.y + player.height - 5, player.width - 10, 3);
+            }
+        }
+
+        function drawObstacles() {
+            for (let obstacle of obstacles) {
+                // Рисуем кактус
+                ctx.drawImage(cactusImg, 0, cactusImg.height - obstacle.height, 
+                    obstacle.width, obstacle.height,
+                    obstacle.x, obstacle.y, 
+                    obstacle.width, obstacle.height);
+            }
+        }
+
+        // ========== УПРАВЛЕНИЕ ==========
+        function jump() {
+            if (!gameRunning) {
+                startGame();
+                return;
+            }
+            
+            if (!player.isJumping) {
+                player.isJumping = true;
+                player.velocityY = GAME_SETTINGS.playerJumpForce;
+                player.isDucking = false;
+                player.height = GAME_SETTINGS.playerHeight;
+            }
+        }
+
+        function duck(startDucking) {
+            if (!gameRunning || player.isJumping) return;
+            
+            player.isDucking = startDucking;
+            player.height = startDucking ? player.duckHeight : GAME_SETTINGS.playerHeight;
+            player.y = startDucking ? GAME_SETTINGS.groundY - player.duckHeight : 
+                                     GAME_SETTINGS.groundY - GAME_SETTINGS.playerHeight;
+        }
+
+        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
+        function setupEventListeners() {
+            // Клавиатура
+            document.addEventListener('keydown', (e) => {
+                switch(e.code) {
+                    case 'Space':
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        jump();
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        duck(true);
+                        break;
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'ArrowDown') {
+                    duck(false);
+                }
+            });
+            
+            // Кнопки
+            startBtn.addEventListener('click', () => {
+                if (!gameRunning) {
+                    startGame();
+                } else {
+                    togglePause();
+                }
+            });
+            
+            jumpBtn.addEventListener('click', jump);
+            
+            resetBtn.addEventListener('click', () => {
+                resetGame();
+                gameRunning = false;
+                startBtn.textContent = "НАЧАТЬ ИГРУ (ПРОБЕЛ)";
+                gameOverScreen.style.display = 'none';
+                drawStartScreen();
+            });
+            
+            restartBtn.addEventListener('click', startGame);
+            
+            // Клик по канвасу
+            canvas.addEventListener('click', () => {
+                if (!gameRunning) {
+                    startGame();
+                }
+            });
+            
+            // Касания для мобильных
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                jump();
+            });
+        }
+
+        function checkMobileDevice() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                jumpBtn.style.display = 'block';
+            }
+        }
+
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+        function updateScore() {
+            scoreElement.textContent = Math.floor(score / 10);
+        }
+
+        // ========== ИГРОВОЙ ЦИКЛ ==========
+        function gameLoop() {
+            update();
+            draw();
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        // ========== ЗАПУСК ИГРЫ ==========
+        // Ждем загрузки DOM
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Запускаем игру даже если DOM уже загружен
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(init, 1);
+        } else {
+            document.addEventListener('DOMContentLoaded', init);
+        }
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Динозаврик Chrome</title>
+    <title>Египетский Динозаврик</title>
     <style>
         * {
             margin: 0;
@@ -11,23 +11,33 @@
             box-sizing: border-box;
             touch-action: manipulation;
             -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
             user-select: none;
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
         body {
-            background-color: #000;
             font-family: 'Arial', sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            padding: 0;
-            margin: 0;
+            background: linear-gradient(180deg, #0c1445 0%, #1a1a2e 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
 
-        .fullscreen-container {
+        /* Контейнер игры - на весь экран */
+        .game-container {
             position: fixed;
             top: 0;
             left: 0;
@@ -37,413 +47,750 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-color: #fff;
             z-index: 1;
+            overflow: hidden;
         }
 
+        /* Канвас - на весь экран */
         #gameCanvas {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #fff;
+            width: 100%;
+            height: 100%;
             display: block;
             cursor: pointer;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
         }
 
-        .mobile-controls {
-            position: fixed;
-            bottom: 30px;
-            left: 0;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            z-index: 100;
-            display: none;
-        }
-
-        .jump-btn {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            width: 120px;
-            height: 120px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
-            transition: all 0.1s;
-            touch-action: manipulation;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .jump-btn:active {
-            transform: scale(0.95);
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
-        }
-
-        .jump-btn::after {
-            content: '↑';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 40px;
-        }
-
-        .game-over {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.95);
-            color: white;
-            padding: 60px 80px;
-            border-radius: 20px;
-            text-align: center;
-            display: none;
-            z-index: 1000;
-            box-shadow: 0 0 80px rgba(255, 0, 0, 0.5);
-            border: 4px solid #ff4444;
-            min-width: 400px;
-            min-height: 300px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .game-over h2 {
-            font-size: 48px;
-            margin-bottom: 30px;
-            color: #ff4444;
-            text-shadow: 0 0 20px rgba(255, 68, 68, 0.7);
-            letter-spacing: 2px;
-        }
-
-        .game-over p {
-            font-size: 36px;
-            margin-bottom: 40px;
-            color: #fff;
-            font-weight: bold;
-        }
-
-        .game-over button {
-            padding: 20px 40px;
-            font-size: 24px;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: bold;
-            min-width: 250px;
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
-        }
-
-        .game-over button:hover {
-            background-color: #0b7dda;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.5);
-        }
-
-        .game-over button:active {
-            transform: translateY(1px);
-        }
-
-        .score-display {
+        /* Оверлей счета - только цифры */
+        .score-overlay {
             position: fixed;
             top: 30px;
             left: 30px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 12px;
-            font-size: 28px;
-            font-weight: bold;
             z-index: 10;
             display: flex;
-            gap: 20px;
-            min-width: 300px;
+            gap: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 35px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .score-item {
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-width: 120px;
         }
 
         .score-label {
             font-size: 14px;
-            color: #aaa;
-            margin-bottom: 5px;
+            color: #D4AF37;
+            margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            font-weight: 600;
         }
 
         .score-value {
-            font-size: 32px;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            font-size: 48px;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 20px #FFD700;
+            font-family: 'Courier New', monospace;
+            line-height: 1;
         }
 
         #score {
-            color: #4CAF50;
+            color: #FFD700;
         }
 
         #highScore {
-            color: #2196F3;
+            color: #4ECDC4;
         }
 
         #fps {
-            color: #FF9800;
+            color: #FF6B6B;
         }
 
+        /* Кнопка прыжка для мобильных - ТОЛЬКО НА ТЕЛЕФОНЕ */
+        .mobile-jump-btn {
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #D4AF37, #B8860B);
+            border: none;
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+            box-shadow: 
+                0 15px 35px rgba(212, 175, 55, 0.5),
+                inset 0 4px 10px rgba(255, 255, 255, 0.3),
+                inset 0 -4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.15s ease;
+            overflow: hidden;
+        }
+
+        .mobile-jump-btn::before {
+            content: '↑';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            color: #8B4513;
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-jump-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .mobile-jump-btn:active {
+            transform: scale(0.92);
+            box-shadow: 
+                0 5px 20px rgba(212, 175, 55, 0.3),
+                inset 0 4px 10px rgba(255, 255, 255, 0.2),
+                inset 0 -4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-jump-btn:active::after {
+            opacity: 1;
+        }
+
+        /* Экран Game Over */
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 40, 0.95);
+            color: #FFD700;
+            padding: 60px 80px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+            box-shadow: 
+                0 0 80px rgba(255, 215, 0, 0.3),
+                0 20px 60px rgba(0, 0, 0, 0.8);
+            border: 4px solid #D4AF37;
+            min-width: 400px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            animation: gameOverAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes gameOverAppear {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .game-over h2 {
+            font-size: 56px;
+            margin-bottom: 30px;
+            color: #D4AF37;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.8);
+            letter-spacing: 3px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .game-over p {
+            font-size: 42px;
+            margin-bottom: 50px;
+            color: #FFD700;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .game-over button {
+            padding: 25px 50px;
+            font-size: 28px;
+            background: linear-gradient(145deg, #D4AF37, #B8860B);
+            color: #8B4513;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 700;
+            min-width: 300px;
+            box-shadow: 
+                0 10px 30px rgba(212, 175, 55, 0.4),
+                inset 0 2px 5px rgba(255, 255, 255, 0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-over button:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 15px 40px rgba(212, 175, 55, 0.6),
+                inset 0 2px 5px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(145deg, #B8860B, #D4AF37);
+        }
+
+        .game-over button:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 5px 20px rgba(212, 175, 55, 0.4),
+                inset 0 2px 5px rgba(255, 255, 255, 0.3);
+        }
+
+        .game-over button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.7s;
+        }
+
+        .game-over button:hover::after {
+            left: 100%;
+        }
+
+        /* Стартовый экран */
         .start-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0, 0, 0, 0.9);
-            color: white;
+            background: rgba(20, 20, 40, 0.95);
+            color: #FFD700;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             text-align: center;
-            padding: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            display: none;
         }
 
         .start-screen h1 {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #4CAF50;
-            text-shadow: 0 0 20px rgba(76, 175, 80, 0.7);
+            font-size: 64px;
+            margin-bottom: 30px;
+            color: #D4AF37;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.7);
+            letter-spacing: 2px;
+            font-weight: 900;
+            animation: titleGlow 2s infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            from {
+                text-shadow: 0 0 20px rgba(212, 175, 55, 0.7);
+            }
+            to {
+                text-shadow: 0 0 40px rgba(212, 175, 55, 1), 0 0 60px rgba(212, 175, 55, 0.5);
+            }
         }
 
         .start-screen p {
             font-size: 24px;
-            margin-bottom: 40px;
-            max-width: 600px;
-            line-height: 1.5;
+            margin-bottom: 50px;
+            max-width: 800px;
+            line-height: 1.6;
+            color: #FFD700;
         }
 
-        .start-screen .controls-info {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            font-size: 18px;
+        .controls-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px 50px;
+            border-radius: 15px;
+            margin-bottom: 50px;
+            font-size: 22px;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .controls-info p {
+            margin: 15px 0;
+            font-size: 22px;
+            color: #FFD700;
         }
 
         .key {
             display: inline-block;
-            background-color: #333;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 5px;
-            margin: 0 5px;
-            font-family: monospace;
-            font-size: 16px;
+            background: rgba(212, 175, 55, 0.2);
+            color: #FFD700;
+            padding: 8px 20px;
+            border-radius: 8px;
+            margin: 0 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: bold;
+            min-width: 100px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
         }
 
         .start-screen button {
-            padding: 20px 50px;
-            font-size: 24px;
-            background-color: #4CAF50;
-            color: white;
+            padding: 25px 60px;
+            font-size: 32px;
+            background: linear-gradient(145deg, #D4AF37, #B8860B);
+            color: #8B4513;
             border: none;
-            border-radius: 10px;
+            border-radius: 15px;
             cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+            font-weight: 700;
+            box-shadow: 
+                0 15px 40px rgba(212, 175, 55, 0.4),
+                inset 0 2px 5px rgba(255, 255, 255, 0.3);
             transition: all 0.3s;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
         }
 
         .start-screen button:hover {
             transform: scale(1.05);
-            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.6);
+            box-shadow: 
+                0 20px 50px rgba(212, 175, 55, 0.6),
+                inset 0 2px 5px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(145deg, #B8860B, #D4AF37);
         }
 
-        /* Для очень больших экранов */
-        @media (min-width: 1920px) {
-            .game-over {
-                padding: 80px 100px;
-                min-width: 500px;
-                min-height: 400px;
+        .start-screen button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.7s;
+        }
+
+        .start-screen button:hover::after {
+            left: 100%;
+        }
+
+        /* Анимации для счета */
+        @keyframes scorePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .score-pop {
+            animation: scorePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes newRecord {
+            0% { 
+                color: #4ECDC4;
+                text-shadow: 0 0 20px #4ECDC4;
             }
-            
-            .game-over h2 {
-                font-size: 56px;
+            50% { 
+                color: #FFD700;
+                text-shadow: 0 0 40px #FFD700, 0 0 60px #FFD700;
+                transform: scale(1.2);
             }
-            
-            .game-over p {
-                font-size: 44px;
+            100% { 
+                color: #4ECDC4;
+                text-shadow: 0 0 20px #4ECDC4;
             }
-            
-            .game-over button {
-                padding: 25px 50px;
-                font-size: 28px;
-                min-width: 300px;
-            }
-            
-            .score-display {
-                padding: 20px 35px;
-                font-size: 32px;
-                min-width: 400px;
-            }
-            
-            .score-value {
-                font-size: 40px;
+        }
+
+        .new-record {
+            animation: newRecord 1s ease 3;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        /* Адаптивность для очень больших экранов (4K) */
+        @media (min-width: 2560px) {
+            .score-overlay {
+                top: 50px;
+                left: 50px;
+                padding: 30px 50px;
+                gap: 60px;
             }
             
             .score-label {
-                font-size: 16px;
+                font-size: 18px;
             }
             
-            .mobile-controls {
-                bottom: 50px;
+            .score-value {
+                font-size: 64px;
             }
             
-            .jump-btn {
-                width: 150px;
-                height: 150px;
-                font-size: 24px;
-            }
-        }
-
-        /* Для мобильных устройств */
-        @media (max-width: 768px) {
-            .mobile-controls {
-                display: flex;
-            }
-            
-            .start-screen {
-                display: none;
+            .score-item {
+                min-width: 180px;
             }
             
             .game-over {
-                padding: 40px 30px;
-                min-width: 90%;
-                min-height: auto;
-                border-radius: 15px;
+                padding: 80px 120px;
+                min-width: 700px;
+                min-height: 500px;
+                border-radius: 35px;
+                border-width: 6px;
             }
             
             .game-over h2 {
-                font-size: 36px;
-                margin-bottom: 20px;
+                font-size: 72px;
             }
             
             .game-over p {
-                font-size: 28px;
-                margin-bottom: 30px;
+                font-size: 56px;
             }
             
             .game-over button {
-                padding: 15px 30px;
-                font-size: 20px;
-                min-width: 200px;
+                padding: 35px 70px;
+                font-size: 36px;
+                min-width: 400px;
+                border-radius: 20px;
             }
             
-            .score-display {
-                top: 20px;
-                left: 20px;
-                padding: 12px 20px;
-                min-width: 250px;
-                font-size: 22px;
-                flex-direction: column;
-                gap: 10px;
+            .mobile-jump-btn {
+                width: 180px;
+                height: 180px;
+                bottom: 70px;
+                right: 70px;
             }
             
-            .score-value {
-                font-size: 26px;
-            }
-            
-            .jump-btn {
-                width: 100px;
-                height: 100px;
-            }
-            
-            .jump-btn::after {
-                font-size: 30px;
+            .mobile-jump-btn::before {
+                font-size: 80px;
             }
         }
 
-        /* Для очень маленьких экранов */
-        @media (max-width: 480px) {
-            .score-display {
-                min-width: 200px;
-                padding: 10px 15px;
-                font-size: 18px;
-                top: 10px;
-                left: 10px;
-            }
-            
-            .score-value {
-                font-size: 22px;
+        /* Адаптивность для средних экранов */
+        @media (max-width: 1366px) {
+            .score-overlay {
+                top: 20px;
+                left: 20px;
+                padding: 15px 25px;
+                gap: 30px;
             }
             
             .score-label {
                 font-size: 12px;
             }
             
+            .score-value {
+                font-size: 36px;
+            }
+            
+            .score-item {
+                min-width: 100px;
+            }
+            
             .game-over {
-                padding: 30px 20px;
+                padding: 40px 60px;
+                min-width: 400px;
+                min-height: 300px;
             }
             
             .game-over h2 {
-                font-size: 30px;
+                font-size: 42px;
+            }
+            
+            .game-over p {
+                font-size: 32px;
+            }
+            
+            .game-over button {
+                padding: 20px 40px;
+                font-size: 24px;
+                min-width: 250px;
+            }
+        }
+
+        /* Для телефонов - ВКЛЮЧАЕМ КНОПКУ ПРЫЖКА */
+        @media (max-width: 768px) {
+            .mobile-jump-btn {
+                display: block;
+            }
+            
+            .start-screen {
+                display: none !important;
+            }
+            
+            .score-overlay {
+                top: 15px;
+                left: 15px;
+                padding: 12px 20px;
+                gap: 20px;
+                flex-direction: column;
+                align-items: flex-start;
+                background: rgba(0, 0, 0, 0.9);
+            }
+            
+            .score-item {
+                flex-direction: row;
+                align-items: center;
+                gap: 15px;
+                min-width: auto;
+            }
+            
+            .score-label {
+                margin-bottom: 0;
+                font-size: 11px;
+                min-width: 60px;
+            }
+            
+            .score-value {
+                font-size: 28px;
+            }
+            
+            .game-over {
+                padding: 30px;
+                min-width: 90%;
+                min-height: auto;
+                border-radius: 20px;
+                border-width: 3px;
+            }
+            
+            .game-over h2 {
+                font-size: 32px;
+                margin-bottom: 20px;
             }
             
             .game-over p {
                 font-size: 24px;
+                margin-bottom: 30px;
             }
             
-            .jump-btn {
-                width: 90px;
-                height: 90px;
+            .game-over button {
+                padding: 18px 30px;
+                font-size: 20px;
+                min-width: 200px;
+            }
+            
+            .mobile-jump-btn {
+                width: 120px;
+                height: 120px;
+                bottom: 30px;
+                right: 30px;
+            }
+            
+            .mobile-jump-btn::before {
+                font-size: 50px;
             }
         }
 
-        /* Анимация для счета */
-        @keyframes scorePop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+        /* Для очень маленьких телефонов */
+        @media (max-width: 480px) {
+            .score-overlay {
+                top: 10px;
+                left: 10px;
+                padding: 10px 15px;
+                gap: 15px;
+            }
+            
+            .score-label {
+                font-size: 10px;
+                min-width: 50px;
+            }
+            
+            .score-value {
+                font-size: 22px;
+            }
+            
+            .game-over {
+                padding: 25px;
+            }
+            
+            .game-over h2 {
+                font-size: 28px;
+            }
+            
+            .game-over p {
+                font-size: 20px;
+            }
+            
+            .game-over button {
+                padding: 15px 25px;
+                font-size: 18px;
+                min-width: 180px;
+            }
+            
+            .mobile-jump-btn {
+                width: 100px;
+                height: 100px;
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .mobile-jump-btn::before {
+                font-size: 40px;
+            }
         }
 
-        .score-pop {
-            animation: scorePop 0.3s ease;
+        /* Для ландшафтной ориентации на телефонах */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .score-overlay {
+                flex-direction: row;
+                top: 10px;
+                left: 10px;
+                padding: 8px 15px;
+                gap: 25px;
+            }
+            
+            .score-item {
+                flex-direction: column;
+                align-items: center;
+                gap: 5px;
+            }
+            
+            .score-label {
+                font-size: 9px;
+                min-width: auto;
+            }
+            
+            .score-value {
+                font-size: 20px;
+            }
+            
+            .mobile-jump-btn {
+                width: 80px;
+                height: 80px;
+                bottom: 15px;
+                right: 15px;
+            }
+            
+            .mobile-jump-btn::before {
+                font-size: 30px;
+            }
+            
+            .game-over {
+                padding: 20px;
+                min-width: 80%;
+            }
+            
+            .game-over h2 {
+                font-size: 24px;
+                margin-bottom: 15px;
+            }
+            
+            .game-over p {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+            
+            .game-over button {
+                padding: 12px 20px;
+                font-size: 16px;
+                min-width: 150px;
+            }
         }
 
-        /* Анимация для нового рекорда */
-        @keyframes newRecord {
-            0% { color: #2196F3; }
-            50% { color: #FFD700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
-            100% { color: #2196F3; }
+        /* Для очень высоких экранов */
+        @media (min-height: 1200px) {
+            .score-overlay {
+                top: 50px;
+                left: 50px;
+            }
+            
+            .mobile-jump-btn {
+                bottom: 80px;
+                right: 80px;
+            }
         }
 
-        .new-record {
-            animation: newRecord 1s ease 3;
+        /* Отключение выделения и контекстного меню */
+        #gameCanvas {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Плавная прокрутка для мобильных */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Оптимизация для устройств с поддержкой hover */
+        @media (hover: hover) and (pointer: fine) {
+            .game-over button:hover,
+            .start-screen button:hover,
+            .mobile-jump-btn:hover {
+                transition: all 0.2s ease;
+            }
+        }
+
+        /* Для устройств без поддержки hover (мобильные) */
+        @media (hover: none) and (pointer: coarse) {
+            .game-over button:active,
+            .start-screen button:active,
+            .mobile-jump-btn:active {
+                transition: all 0.1s ease;
+            }
+        }
+
+        /* Запрет масштабирования на мобильных */
+        @media (max-width: 768px) {
+            html, body {
+                touch-action: none;
+                -webkit-text-size-adjust: none;
+                text-size-adjust: none;
+            }
+        }
+
+        /* Пирамиды и египетские узоры на фоне */
+        .egypt-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(45deg, rgba(212, 175, 55, 0.03) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(212, 175, 55, 0.03) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(212, 175, 55, 0.03) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(212, 175, 55, 0.03) 75%);
+            background-size: 100px 100px;
+            background-position: 0 0, 0 50px, 50px -50px, -50px 0px;
+            z-index: 0;
+            opacity: 0.3;
         }
     </style>
 </head>
 <body>
-    <div class="fullscreen-container">
+    <div class="egypt-pattern"></div>
+    
+    <div class="game-container">
         <canvas id="gameCanvas"></canvas>
         
-        <div class="score-display">
+        <div class="score-overlay">
             <div class="score-item">
                 <div class="score-label">СЧЕТ</div>
                 <div id="score" class="score-value">0</div>
@@ -458,9 +805,7 @@
             </div>
         </div>
         
-        <div class="mobile-controls">
-            <button class="jump-btn"></button>
-        </div>
+        <div class="mobile-jump-btn"></div>
         
         <div id="gameOver" class="game-over">
             <h2>ИГРА ОКОНЧЕНА</h2>
@@ -469,32 +814,35 @@
         </div>
         
         <div id="startScreen" class="start-screen">
-            <h1>ДИНОЗАВРИК CHROME</h1>
-            <p>Используйте вашу картинку вместо динозаврика</p>
+            <h1>ЕГИПЕТСКИЙ ДИНОЗАВРИК</h1>
+            <p>Ночь в пустыне. Прыгайте через низкие препятствия!</p>
             <div class="controls-info">
                 <p><span class="key">ПРОБЕЛ</span> или <span class="key">↑</span> - Прыжок</p>
                 <p><span class="key">↓</span> - Присесть</p>
-                <p>Избегайте кактусов!</p>
+                <p>Только низкие препятствия!</p>
             </div>
             <button id="startBtn">НАЧАТЬ ИГРУ</button>
         </div>
     </div>
 
     <script>
-        // ========== КОНСТАНТЫ И НАСТРОЙКИ ==========
+        // ========== НАСТРОЙКИ ИГРЫ - ЕГИПЕТСКАЯ НОЧЬ ==========
         const GAME = {
-            playerWidth: 80,      // Увеличено для 1920x1080
-            playerHeight: 80,     // Увеличено для 1920x1080
-            playerJumpForce: 16,  // Увеличено для более высокого прыжка
-            gravity: 0.8,
-            initialSpeed: 8,
-            speedIncrease: 0.0005,
-            cactusWidth: 30,      // Увеличено
-            minCactusHeight: 50,  // Увеличено
-            maxCactusHeight: 80,  // Увеличено
-            minCactusGap: 300,
-            maxCactusGap: 500,
-            groundHeight: 20      // Увеличено
+            playerWidth: 100,           // Размер игрока
+            playerHeight: 100,          // Размер игрока
+            playerJumpForce: 14,        // Сила прыжка (уменьшена)
+            gravity: 0.7,              // Гравитация (уменьшена)
+            initialSpeed: 4,           // ОЧЕНЬ МЕДЛЕННАЯ начальная скорость
+            speedIncrease: 0.00005,    // ОЧЕНЬ медленное ускорение
+            obstacleWidth: 25,         // Ширина препятствий
+            minObstacleHeight: 40,     // МИНИМАЛЬНАЯ высота (только низкие!)
+            maxObstacleHeight: 60,     // МАКСИМАЛЬНАЯ высота (невысокие!)
+            minObstacleGap: 500,       // БОЛЬШОЕ расстояние между препятствиями
+            maxObstacleGap: 800,       // ОЧЕНЬ большое расстояние
+            groundHeight: 40,          // Толстый слой песка
+            starCount: 80,             // Звезды
+            moonSize: 100,             // Большая луна
+            pyramidCount: 3            // Пирамиды на заднем плане
         };
 
         // ========== ПЕРЕМЕННЫЕ ИГРЫ ==========
@@ -502,103 +850,109 @@
         let gameRunning = false;
         let gameSpeed = GAME.initialSpeed;
         let score = 0;
-        let highScore = localStorage.getItem('dinoHighScore') || 0;
+        let highScore = parseInt(localStorage.getItem('dinoHighScore')) || 0;
         let frames = 0;
         let fps = 60;
-        let lastTime = 0;
-        let fpsInterval = 1000/60;
-        let then = Date.now();
+        let lastFpsUpdate = 0;
+        let fpsFrameCount = 0;
         let gameLoopId = null;
         let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         // ========== ИГРОВЫЕ ОБЪЕКТЫ ==========
         let player = {
-            x: 150, // Отодвинуто от края
+            x: 200,                    // Отступ от края
             y: 0,
             width: GAME.playerWidth,
             height: GAME.playerHeight,
             velocityY: 0,
             isJumping: false,
             isDucking: false,
-            duckHeight: GAME.playerHeight * 0.6,
-            groundY: 0 // Будет установлено позже
+            duckHeight: GAME.playerHeight * 0.5, // Низкое приседание
+            groundY: 0
         };
         
-        let obstacles = [];
-        let clouds = [];
+        let obstacles = [];            // Только НИЗКИЕ препятствия
+        let stars = [];
+        let pyramids = [];
         
         // ========== ИЗОБРАЖЕНИЯ ==========
         let playerImg = new Image();
-        let cactusImg = new Image();
+        let obstacleImg = new Image(); // Низкие египетские препятствия
         
         // ========== DOM ЭЛЕМЕНТЫ ==========
         let scoreElement, highScoreElement, fpsElement;
-        let startBtn, jumpBtn, restartBtn;
+        let jumpBtn, restartBtn, startBtn;
         let gameOverScreen, finalScoreElement;
         let startScreen;
-        let canvasContainer;
 
-        // ========== ИНИЦИАЛИЗАЦИЯ ИГРЫ ==========
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
         function init() {
-            console.log("Инициализация игры...");
+            console.log("🚀 Инициализация египетской ночной игры...");
             
-            // Получаем элементы DOM
+            // Получаем элементы
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
             
             scoreElement = document.getElementById('score');
             highScoreElement = document.getElementById('highScore');
             fpsElement = document.getElementById('fps');
-            startBtn = document.getElementById('startBtn');
-            jumpBtn = document.querySelector('.jump-btn');
+            jumpBtn = document.querySelector('.mobile-jump-btn');
             restartBtn = document.getElementById('restartBtn');
-            gameOverScreen = document.getElementById('gameOver');
-            finalScoreElement = document.getElementById('finalScore');
-            startScreen = document.getElementById('startScreen');
+            startBtn = document.getElementById('startBtn');
+            gameOverScreen = document.querySelector('.game-over');
+            finalScoreElement = gameOverScreen.querySelector('p span');
+            startScreen = document.querySelector('.start-screen');
             
-            // Настраиваем канвас на полный экран
+            // Устанавливаем размеры канваса
             resizeCanvas();
             
+            // Загружаем картинку игрока
+            playerImg.src = 'images/othcim.jpg';
+            playerImg.crossOrigin = "anonymous";
+            playerImg.onload = function() {
+                console.log("✅ Картинка игрока загружена");
+                createObstacleImage();
+                startGameAfterLoad();
+            };
+            playerImg.onerror = function() {
+                console.log("❌ Картинка не найдена, создаю египетского динозаврика...");
+                createDefaultPlayerImage();
+                createObstacleImage();
+                startGameAfterLoad();
+            };
+            
+            // Настраиваем управление
+            setupControls();
+            
+            // Создаем звезды и пирамиды
+            createStars();
+            createPyramids();
+            
+            // Обновляем рекорд
+            updateHighScore();
+            
+            // Показываем стартовый экран на ПК
+            if (!isMobile) {
+                startScreen.style.display = 'flex';
+            }
+            
+            console.log("🎮 Египетская игра готова!");
+        }
+
+        function startGameAfterLoad() {
             // Устанавливаем позицию земли
             player.groundY = canvas.height - GAME.groundHeight - player.height;
             player.y = player.groundY;
             
-            // Загружаем картинку игрока
-            playerImg.src = 'images/othcim.jpg';
-            playerImg.onerror = function() {
-                console.log("Изображение не найдено. Создаю стандартного динозаврика...");
-                createDefaultPlayerImage();
-            };
-            
-            // Создаем изображения
-            createCactusImage();
-            createClouds();
-            
-            // Устанавливаем начальные значения
-            highScoreElement.textContent = formatNumber(highScore);
-            
-            // Настраиваем мобильное управление
-            if (isMobile) {
-                document.querySelector('.mobile-controls').style.display = 'flex';
-                startScreen.style.display = 'none';
-            }
-            
-            // Назначаем обработчики событий
-            setupEventListeners();
-            
             // Запускаем игровой цикл
-            then = Date.now();
-            gameLoop();
-            
-            console.log("Игра инициализирована");
+            requestAnimationFrame(gameLoop);
         }
 
-        // ========== РАЗМЕР КАНВАСА ==========
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             
-            // Обновляем позицию земли при изменении размера
+            // Обновляем позицию земли
             if (player) {
                 player.groundY = canvas.height - GAME.groundHeight - player.height;
                 if (!player.isJumping) {
@@ -606,7 +960,11 @@
                 }
             }
             
-            console.log(`Размер канваса: ${canvas.width}x${canvas.height}`);
+            // Пересоздаем звезды и пирамиды при изменении размера
+            createStars();
+            createPyramids();
+            
+            console.log(`📐 Размер экрана: ${canvas.width}x${canvas.height}`);
         }
 
         // ========== СОЗДАНИЕ ИЗОБРАЖЕНИЙ ==========
@@ -616,102 +974,99 @@
             tempCanvas.height = GAME.playerHeight;
             const tempCtx = tempCanvas.getContext('2d');
             
-            // Большой динозаврик для 1920x1080
-            tempCtx.fillStyle = '#535353';
+            // Египетский динозаврик
+            tempCtx.fillStyle = '#8B4513'; // Коричневый
             
-            // Тело (больше)
-            tempCtx.fillRect(15, 20, 50, 40);
+            // Тело
+            tempCtx.fillRect(20, 30, 60, 40);
             
-            // Ноги (толще)
-            tempCtx.fillRect(20, 60, 12, 20);
-            tempCtx.fillRect(48, 60, 12, 20);
+            // Ноги
+            tempCtx.fillRect(25, 70, 15, 20);
+            tempCtx.fillRect(60, 70, 15, 20);
             
-            // Голова и шея (больше)
-            tempCtx.fillRect(60, 10, 16, 30);
-            tempCtx.fillRect(70, 4, 20, 20);
+            // Голова с египетским головным убором
+            tempCtx.fillRect(75, 20, 20, 30);
             
-            // Глаз (больше)
-            tempCtx.fillStyle = 'white';
-            tempCtx.fillRect(76, 8, 8, 8);
-            tempCtx.fillStyle = 'black';
-            tempCtx.fillRect(78, 10, 4, 4);
+            // Головной убор (полосатый)
+            tempCtx.fillStyle = '#D4AF37';
+            for (let i = 0; i < 3; i++) {
+                tempCtx.fillRect(70, 15 + i * 5, 30, 2);
+            }
             
-            // Хвост (больше)
-            tempCtx.fillStyle = '#535353';
-            tempCtx.fillRect(0, 30, 10, 8);
-            tempCtx.fillRect(4, 38, 6, 4);
+            // Глаз
+            tempCtx.fillStyle = '#FFD700';
+            tempCtx.fillRect(85, 25, 8, 8);
+            tempCtx.fillStyle = '#000';
+            tempCtx.fillRect(87, 27, 4, 4);
+            
+            // Хвост с узором
+            tempCtx.fillStyle = '#8B4513';
+            tempCtx.fillRect(5, 40, 15, 8);
+            
+            // Египетский узор на теле
+            tempCtx.fillStyle = '#D4AF37';
+            tempCtx.fillRect(30, 35, 40, 3);
+            tempCtx.fillRect(30, 45, 40, 3);
             
             playerImg.src = tempCanvas.toDataURL();
         }
 
-        function createCactusImage() {
+        function createObstacleImage() {
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = GAME.cactusWidth;
-            tempCanvas.height = GAME.maxCactusHeight;
+            tempCanvas.width = GAME.obstacleWidth;
+            tempCanvas.height = GAME.maxObstacleHeight;
             const tempCtx = tempCanvas.getContext('2d');
             
-            // Большой кактус
-            tempCtx.fillStyle = '#0a0';
-            tempCtx.fillRect(8, 0, 14, GAME.maxCactusHeight);
+            // НИЗКОЕ египетское препятствие (саржа/камень)
+            tempCtx.fillStyle = '#8B7355'; // Цвет песка
             
-            // Полоски на кактусе
-            tempCtx.fillStyle = '#080';
-            tempCtx.fillRect(10, 10, 10, 6);
-            tempCtx.fillRect(10, 30, 10, 6);
-            tempCtx.fillRect(10, 50, 10, 6);
+            // Основание
+            tempCtx.fillRect(5, GAME.maxObstacleHeight - 40, GAME.obstacleWidth - 10, 40);
             
-            // Шипы (больше)
-            tempCtx.strokeStyle = '#060';
-            tempCtx.lineWidth = 2;
+            // Верхняя часть с узором
+            tempCtx.fillStyle = '#D4AF37';
+            tempCtx.fillRect(5, GAME.maxObstacleHeight - 45, GAME.obstacleWidth - 10, 5);
             
-            // Левые шипы
-            tempCtx.beginPath();
-            tempCtx.moveTo(8, 20);
-            tempCtx.lineTo(2, 20);
-            tempCtx.stroke();
+            // Египетский узор
+            tempCtx.fillStyle = '#8B4513';
+            for (let i = 0; i < 3; i++) {
+                tempCtx.fillRect(
+                    8 + i * 6, 
+                    GAME.maxObstacleHeight - 30, 
+                    3, 
+                    15
+                );
+            }
             
-            tempCtx.beginPath();
-            tempCtx.moveTo(8, 40);
-            tempCtx.lineTo(2, 40);
-            tempCtx.stroke();
-            
-            tempCtx.beginPath();
-            tempCtx.moveTo(8, 60);
-            tempCtx.lineTo(2, 60);
-            tempCtx.stroke();
-            
-            // Правые шипы
-            tempCtx.beginPath();
-            tempCtx.moveTo(22, 30);
-            tempCtx.lineTo(28, 30);
-            tempCtx.stroke();
-            
-            tempCtx.beginPath();
-            tempCtx.moveTo(22, 50);
-            tempCtx.lineTo(28, 50);
-            tempCtx.stroke();
-            
-            tempCtx.beginPath();
-            tempCtx.moveTo(22, 70);
-            tempCtx.lineTo(28, 70);
-            tempCtx.stroke();
-            
-            cactusImg.src = tempCanvas.toDataURL();
+            obstacleImg.src = tempCanvas.toDataURL();
         }
 
-        function createClouds() {
-            clouds = [];
-            for (let i = 0; i < 4; i++) {
-                clouds.push({
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < GAME.starCount; i++) {
+                stars.push({
                     x: Math.random() * canvas.width,
-                    y: Math.random() * 150 + 50,
-                    width: Math.random() * 60 + 80,
-                    speed: Math.random() * 0.8 + 0.3
+                    y: Math.random() * canvas.height * 0.7,
+                    size: Math.random() * 3 + 1,
+                    brightness: Math.random() * 0.7 + 0.3,
+                    twinkleSpeed: Math.random() * 0.03 + 0.01
                 });
             }
         }
 
-        // ========== ОСНОВНЫЕ ФУНКЦИИ ИГРЫ ==========
+        function createPyramids() {
+            pyramids = [];
+            for (let i = 0; i < GAME.pyramidCount; i++) {
+                pyramids.push({
+                    x: Math.random() * canvas.width,
+                    width: Math.random() * 200 + 150,
+                    height: Math.random() * 80 + 120,
+                    distance: Math.random() * 0.3 + 0.7 // Для параллакса
+                });
+            }
+        }
+
+        // ========== УПРАВЛЕНИЕ ИГРОЙ ==========
         function startGame() {
             if (gameRunning) return;
             
@@ -720,14 +1075,16 @@
             gameOverScreen.style.display = 'none';
             startScreen.style.display = 'none';
             
-            console.log("Игра началась");
+            console.log("▶️ Игра начата!");
         }
 
         function resetGame() {
             score = 0;
-            gameSpeed = GAME.initialSpeed;
+            gameSpeed = GAME.initialSpeed; // Сбрасываем скорость к МИНИМАЛЬНОЙ
             obstacles = [];
             frames = 0;
+            fpsFrameCount = 0;
+            lastFpsUpdate = Date.now();
             
             player.y = player.groundY;
             player.velocityY = 0;
@@ -736,6 +1093,7 @@
             player.height = GAME.playerHeight;
             
             updateScore();
+            updateFPS();
         }
 
         function gameOver() {
@@ -745,65 +1103,62 @@
             // Обновляем рекорд
             if (score > highScore) {
                 highScore = score;
-                highScoreElement.textContent = formatNumber(highScore);
                 localStorage.setItem('dinoHighScore', highScore);
+                updateHighScore();
                 highScoreElement.classList.add('new-record');
                 setTimeout(() => {
                     highScoreElement.classList.remove('new-record');
-                }, 1000);
+                }, 3000);
             }
             
             // Показываем итоговый счет
             finalScoreElement.textContent = formatNumber(score);
             
-            console.log("Игра окончена. Счет:", score);
+            console.log("💀 Игра окончена! Счет:", score);
         }
 
-        // ========== ОБНОВЛЕНИЕ ИГРОВОГО СОСТОЯНИЯ ==========
-        function update(currentTime) {
+        // ========== ИГРОВАЯ ЛОГИКА ==========
+        function update() {
             if (!gameRunning) return;
             
             frames++;
+            fpsFrameCount++;
             
-            // Рассчитываем FPS
+            // Обновляем FPS каждую секунду
             const now = Date.now();
-            const elapsed = now - then;
-            
-            if (elapsed > fpsInterval) {
-                then = now - (elapsed % fpsInterval);
-                fps = Math.round(1000 / elapsed);
-                fpsElement.textContent = fps;
+            if (now - lastFpsUpdate >= 1000) {
+                fps = Math.round((fpsFrameCount * 1000) / (now - lastFpsUpdate));
+                fps = Math.min(fps, 3334444);
+                updateFPS();
+                fpsFrameCount = 0;
+                lastFpsUpdate = now;
             }
             
-            // Увеличиваем скорость со временем
-            gameSpeed += GAME.speedIncrease;
+            // ОЧЕНЬ-ОЧЕНЬ медленно увеличиваем скорость
+            if (frames % 200 === 0) { // Только каждый 200-й кадр
+                gameSpeed += GAME.speedIncrease;
+                console.log("📈 Скорость увеличена до:", gameSpeed.toFixed(3));
+            }
             
             // Обновляем игрока
             updatePlayer();
             
-            // Обновляем препятствия
+            // Обновляем препятствия (РЕДКО!)
             updateObstacles();
             
-            // Обновляем облака
-            updateClouds();
-            
             // Увеличиваем счет
-            score += Math.round(gameSpeed);
-            if (frames % 10 === 0) {
-                updateScore();
-            }
+            score += 0.5; // ОЧЕНЬ медленно
+            updateScore();
             
             // Проверяем столкновения
             checkCollisions();
         }
 
         function updatePlayer() {
-            // Применяем гравитацию
             if (player.isJumping) {
                 player.velocityY -= GAME.gravity;
                 player.y -= player.velocityY;
                 
-                // Проверяем, достиг ли игрок земли
                 if (player.y >= player.groundY) {
                     player.y = player.groundY;
                     player.isJumping = false;
@@ -813,54 +1168,51 @@
         }
 
         function updateObstacles() {
-            // Удаляем препятствия, которые ушли за экран
+            // Удаляем вышедшие за экран
             obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
             
-            // Двигаем препятствия
+            // Двигаем препятствия МЕДЛЕННО
             for (let obstacle of obstacles) {
                 obstacle.x -= gameSpeed;
                 
-                // Отмечаем пройденные препятствия
+                // Отмечаем пройденные
                 if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
                     obstacle.passed = true;
-                    score += 100;
+                    score += 25; // Маленький бонус
                     scoreElement.classList.add('score-pop');
                     setTimeout(() => {
                         scoreElement.classList.remove('score-pop');
-                    }, 300);
+                    }, 400);
                 }
             }
             
-            // Создаем новые препятствия
-            if (frames % Math.floor((GAME.maxCactusGap) / gameSpeed) === 0) {
-                createObstacle();
+            // Создаем новые препятствия ОЧЕНЬ РЕДКО
+            // Только каждый 150-й кадр И если прошло достаточно времени И если меньше 2 препятствий
+            if (frames % 150 === 0 && obstacles.length < 2) {
+                // Проверяем, что последнее препятствие далеко
+                const lastObstacle = obstacles[obstacles.length - 1];
+                if (!lastObstacle || (canvas.width - lastObstacle.x) > GAME.minObstacleGap) {
+                    createObstacle();
+                }
             }
         }
 
         function createObstacle() {
+            // ТОЛЬКО НИЗКИЕ препятствия!
             const height = Math.floor(Math.random() * 
-                (GAME.maxCactusHeight - GAME.minCactusHeight)) + 
-                GAME.minCactusHeight;
+                (GAME.maxObstacleHeight - GAME.minObstacleHeight)) + 
+                GAME.minObstacleHeight;
             
             obstacles.push({
                 x: canvas.width,
                 y: canvas.height - GAME.groundHeight - height,
-                width: GAME.cactusWidth,
+                width: GAME.obstacleWidth,
                 height: height,
-                passed: false
+                passed: false,
+                isLow: height < 50 // Отметка низкого препятствия
             });
-        }
-
-        function updateClouds() {
-            for (let cloud of clouds) {
-                cloud.x -= cloud.speed;
-                
-                // Если облако ушло за экран, перемещаем его в начало
-                if (cloud.x + cloud.width < 0) {
-                    cloud.x = canvas.width;
-                    cloud.y = Math.random() * 150 + 50;
-                }
-            }
+            
+            console.log("🗿 Создано низкое препятствие. Высота:", height, "Всего препятствий:", obstacles.length);
         }
 
         function checkCollisions() {
@@ -891,14 +1243,6 @@
                 player.velocityY = GAME.playerJumpForce;
                 player.isDucking = false;
                 player.height = GAME.playerHeight;
-                
-                // Эффект нажатия на мобильном
-                if (isMobile) {
-                    jumpBtn.style.transform = 'scale(0.95)';
-                    setTimeout(() => {
-                        jumpBtn.style.transform = 'scale(1)';
-                    }, 100);
-                }
             }
         }
 
@@ -907,23 +1251,30 @@
             
             player.isDucking = startDucking;
             player.height = startDucking ? player.duckHeight : GAME.playerHeight;
-            player.y = startDucking ? player.groundY + (GAME.playerHeight - player.duckHeight) : player.groundY;
+            player.y = startDucking ? 
+                player.groundY + (GAME.playerHeight - player.duckHeight) : 
+                player.groundY;
         }
 
         // ========== ОТРИСОВКА ==========
         function draw() {
-            // Очищаем канвас
+            // Очищаем экран
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Рисуем фон (небо)
-            ctx.fillStyle = '#f7f7f7';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Рисуем египетскую ночь
+            drawEgyptianNight();
             
-            // Рисуем облака
-            drawClouds();
+            // Рисуем звезды
+            drawStars();
             
-            // Рисуем землю
-            drawGround();
+            // Рисуем луну
+            drawMoon();
+            
+            // Рисуем пирамиды
+            drawPyramids();
+            
+            // Рисуем песок (оранжево-желтый египетский)
+            drawEgyptianSand();
             
             // Рисуем препятствия
             drawObstacles();
@@ -931,196 +1282,357 @@
             // Рисуем игрока
             drawPlayer();
             
-            // Если игра не запущена и нет экрана game over, рисуем стартовый экран
-            if (!gameRunning && gameOverScreen.style.display === 'none' && !isMobile) {
-                startScreen.style.display = 'flex';
-            }
+            // Рисуем свет от луны
+            drawMoonlight();
         }
 
-        function drawGround() {
-            // Земля
-            ctx.fillStyle = '#535353';
-            ctx.fillRect(0, canvas.height - GAME.groundHeight, canvas.width, GAME.groundHeight);
+        function drawEgyptianNight() {
+            // Темно-синее ночное небо Египта
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.7);
+            gradient.addColorStop(0, '#0c1445'); // Темно-синий
+            gradient.addColorStop(0.5, '#1a1a2e'); // Почти черный
+            gradient.addColorStop(1, '#16213e'); // Темно-синий
             
-            // Линия горизонта
-            ctx.strokeStyle = '#ddd';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - GAME.groundHeight);
-            ctx.lineTo(canvas.width, canvas.height - GAME.groundHeight);
-            ctx.stroke();
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Текстура земли
-            ctx.fillStyle = '#666';
-            for (let i = 0; i < canvas.width; i += 40) {
-                ctx.fillRect(i, canvas.height - GAME.groundHeight, 4, 6);
-            }
-        }
-
-        function drawClouds() {
-            for (let cloud of clouds) {
-                ctx.fillStyle = '#f0f0f0';
-                
-                // Рисуем большое пушистое облако
+            // Созвездия
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            const constellations = [
+                {x: canvas.width * 0.2, y: 100, size: 4},
+                {x: canvas.width * 0.4, y: 150, size: 3},
+                {x: canvas.width * 0.6, y: 80, size: 5},
+                {x: canvas.width * 0.8, y: 120, size: 4}
+            ];
+            
+            constellations.forEach(star => {
                 ctx.beginPath();
-                ctx.arc(cloud.x + 20, cloud.y, 16, 0, Math.PI * 2);
-                ctx.arc(cloud.x + 40, cloud.y - 10, 20, 0, Math.PI * 2);
-                ctx.arc(cloud.x + 60, cloud.y, 16, 0, Math.PI * 2);
-                ctx.arc(cloud.x + 40, cloud.y + 10, 14, 0, Math.PI * 2);
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Лучи от ярких звезд
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i * Math.PI) / 4;
+                    ctx.beginPath();
+                    ctx.moveTo(star.x, star.y);
+                    ctx.lineTo(
+                        star.x + Math.cos(angle) * (star.size * 8),
+                        star.y + Math.sin(angle) * (star.size * 8)
+                    );
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function drawStars() {
+            for (let star of stars) {
+                // Мерцание звезд
+                const twinkle = Math.sin(frames * star.twinkleSpeed) * 0.4 + 0.6;
+                
+                ctx.fillStyle = `rgba(255, 255, 220, ${star.brightness * twinkle})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
 
+        function drawMoon() {
+            // Большая яркая луна
+            ctx.fillStyle = '#FFF8DC'; // Цвет слоновой кости
+            ctx.beginPath();
+            ctx.arc(canvas.width - 120, 120, GAME.moonSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Кратеры на луне
+            ctx.fillStyle = '#D4AF37'; // Золотистый
+            ctx.beginPath();
+            ctx.arc(canvas.width - 140, 100, 15, 0, Math.PI * 2);
+            ctx.arc(canvas.width - 100, 150, 20, 0, Math.PI * 2);
+            ctx.arc(canvas.width - 120, 130, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Свечение луны
+            const glow = ctx.createRadialGradient(
+                canvas.width - 120, 120, GAME.moonSize,
+                canvas.width - 120, 120, GAME.moonSize * 2
+            );
+            glow.addColorStop(0, 'rgba(255, 248, 220, 0.3)');
+            glow.addColorStop(1, 'rgba(255, 248, 220, 0)');
+            
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(canvas.width - 120, 120, GAME.moonSize * 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawPyramids() {
+            for (let pyramid of pyramids) {
+                // Параллакс-эффект
+                const parallaxX = pyramid.x - (frames * 0.1 * pyramid.distance);
+                
+                // Если пирамида ушла за экран, перемещаем ее
+                if (parallaxX + pyramid.width < 0) {
+                    pyramid.x = canvas.width;
+                }
+                
+                // Цвет пирамиды (золотистый ночью)
+                ctx.fillStyle = pyramid.distance > 0.8 ? '#D4AF37' : '#B8860B';
+                
+                // Рисуем пирамиду
+                ctx.beginPath();
+                ctx.moveTo(parallaxX, canvas.height - GAME.groundHeight);
+                ctx.lineTo(parallaxX + pyramid.width / 2, canvas.height - GAME.groundHeight - pyramid.height);
+                ctx.lineTo(parallaxX + pyramid.width, canvas.height - GAME.groundHeight);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Текстура пирамиды (слои)
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 1;
+                const layerHeight = pyramid.height / 10;
+                for (let i = 1; i < 10; i++) {
+                    const y = canvas.height - GAME.groundHeight - (layerHeight * i);
+                    const layerWidth = pyramid.width * (1 - (i / 10));
+                    ctx.beginPath();
+                    ctx.moveTo(parallaxX + (pyramid.width - layerWidth) / 2, y);
+                    ctx.lineTo(parallaxX + pyramid.width - (pyramid.width - layerWidth) / 2, y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function drawEgyptianSand() {
+            // ОРАНЖЕВО-ЖЕЛТЫЙ ЕГИПЕТСКИЙ ПЕСОК
+            const sandGradient = ctx.createLinearGradient(0, canvas.height - GAME.groundHeight, 0, canvas.height);
+            sandGradient.addColorStop(0, '#D4AF37'); // Золотистый сверху
+            sandGradient.addColorStop(1, '#B8860B'); // Темнее снизу
+            
+            // Основной песок
+            ctx.fillStyle = sandGradient;
+            ctx.fillRect(0, canvas.height - GAME.groundHeight, canvas.width, GAME.groundHeight);
+            
+            // Волны песка (дюны)
+            ctx.fillStyle = '#8B4513'; // Коричневый для теней
+            for (let i = 0; i < canvas.width; i += 60) {
+                const waveHeight = Math.sin((frames * 0.01) + (i * 0.005)) * 8 + 10;
+                const waveWidth = 50;
+                ctx.beginPath();
+                ctx.moveTo(i, canvas.height - GAME.groundHeight);
+                ctx.quadraticCurveTo(
+                    i + waveWidth/2,
+                    canvas.height - GAME.groundHeight - waveHeight,
+                    i + waveWidth,
+                    canvas.height - GAME.groundHeight
+                );
+                ctx.fill();
+            }
+            
+            // Блестки в песке (отражение звезд)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < 20; i++) {
+                const x = (frames * 0.5 + i * 100) % canvas.width;
+                const size = Math.sin(frames * 0.02 + i) * 2 + 2;
+                ctx.beginPath();
+                ctx.arc(x, canvas.height - GAME.groundHeight + 5, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawMoonlight() {
+            // Свет от луны на земле
+            const moonlight = ctx.createRadialGradient(
+                canvas.width - 120, 120, 0,
+                canvas.width - 120, 120, canvas.width * 0.8
+            );
+            moonlight.addColorStop(0, 'rgba(255, 248, 220, 0.1)');
+            moonlight.addColorStop(0.5, 'rgba(212, 175, 55, 0.05)');
+            moonlight.addColorStop(1, 'rgba(212, 175, 55, 0)');
+            
+            ctx.fillStyle = moonlight;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
         function drawPlayer() {
-            // Рисуем картинку игрока (большую)
+            // Рисуем картинку игрока
             ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
             
-            // Если игрок пригнулся
-            if (player.isDucking) {
-                ctx.fillStyle = '#535353';
-                ctx.fillRect(player.x + 10, player.y + player.height - 10, player.width - 20, 6);
-            }
+            // Тень под игроком (длинная от луны)
+            const shadow = ctx.createRadialGradient(
+                player.x + player.width/2,
+                canvas.height - GAME.groundHeight,
+                0,
+                player.x + player.width/2,
+                canvas.height - GAME.groundHeight,
+                player.width * 2
+            );
+            shadow.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
+            shadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = shadow;
+            ctx.beginPath();
+            ctx.ellipse(
+                player.x + player.width/2,
+                canvas.height - GAME.groundHeight,
+                player.width/2,
+                10,
+                0, 0, Math.PI * 2
+            );
+            ctx.fill();
         }
 
         function drawObstacles() {
             for (let obstacle of obstacles) {
-                // Рисуем кактус
-                ctx.drawImage(cactusImg, 0, cactusImg.height - obstacle.height, 
-                    obstacle.width, obstacle.height,
-                    obstacle.x, obstacle.y, 
-                    obstacle.width, obstacle.height);
+                // Рисуем низкое египетское препятствие
+                const actualHeight = Math.min(obstacle.height, GAME.maxObstacleHeight);
+                ctx.drawImage(
+                    obstacleImg,
+                    0, obstacleImg.height - actualHeight,
+                    obstacle.width, actualHeight,
+                    obstacle.x, obstacle.y,
+                    obstacle.width, actualHeight
+                );
                 
-                // Тень под кактусом
+                // Подсветка от луны
+                if (obstacle.x > canvas.width * 0.6) {
+                    ctx.fillStyle = 'rgba(255, 248, 220, 0.1)';
+                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, 5);
+                }
+                
+                // Тень под препятствием
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
                 ctx.fillRect(
-                    obstacle.x + 4, 
-                    canvas.height - GAME.groundHeight, 
-                    obstacle.width - 8, 
-                    6
+                    obstacle.x + 3,
+                    canvas.height - GAME.groundHeight,
+                    obstacle.width - 6,
+                    8
                 );
             }
         }
 
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function updateScore() {
-            scoreElement.textContent = formatNumber(score);
+            scoreElement.textContent = Math.floor(score);
+        }
+
+        function updateHighScore() {
+            highScoreElement.textContent = formatNumber(highScore);
+        }
+
+        function updateFPS() {
+            fpsElement.textContent = formatNumber(fps);
+            
+            // Цвет FPS в зависимости от значения
+            if (fps < 30) {
+                fpsElement.style.color = '#ff4444';
+            } else if (fps < 50) {
+                fpsElement.style.color = '#ff9800';
+            } else {
+                fpsElement.style.color = '#FF6B6B';
+            }
         }
 
         function formatNumber(num) {
+            if (num >= 1000000000) {
+                return (num / 1000000000).toFixed(1) + 'B';
+            }
             if (num >= 1000000) {
                 return (num / 1000000).toFixed(1) + 'M';
-            } else if (num >= 1000) {
+            }
+            if (num >= 1000) {
                 return (num / 1000).toFixed(1) + 'K';
             }
-            return num.toString();
+            return Math.floor(num).toString();
         }
 
-        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
-        function setupEventListeners() {
+        // ========== УПРАВЛЕНИЕ ==========
+        function setupControls() {
             // Клавиатура
-            document.addEventListener('keydown', handleKeyDown);
-            document.addEventListener('keyup', handleKeyUp);
+            document.addEventListener('keydown', (e) => {
+                switch(e.code) {
+                    case 'Space':
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        jump();
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        duck(true);
+                        break;
+                    case 'Enter':
+                        if (!gameRunning && gameOverScreen.style.display === 'flex') {
+                            startGame();
+                        }
+                        break;
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'ArrowDown') {
+                    duck(false);
+                }
+            });
             
             // Кнопки
-            startBtn.addEventListener('click', startGame);
-            jumpBtn.addEventListener('click', jump);
-            restartBtn.addEventListener('click', startGame);
+            if (jumpBtn) {
+                jumpBtn.addEventListener('click', jump);
+                jumpBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    jump();
+                });
+            }
             
-            // Клик по канвасу
-            canvas.addEventListener('click', () => {
+            if (restartBtn) {
+                restartBtn.addEventListener('click', startGame);
+            }
+            
+            if (startBtn) {
+                startBtn.addEventListener('click', startGame);
+            }
+            
+            // Клик по канвасу (старт на ПК)
+            canvas.addEventListener('click', (e) => {
                 if (!gameRunning && !isMobile) {
                     startGame();
                 }
             });
             
-            // Касания для мобильных
-            canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (!gameRunning) {
-                    startGame();
-                } else {
-                    jump();
-                }
-            });
-            
             // Изменение размера окна
             window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('orientationchange', resizeCanvas);
             
             // Предотвращаем контекстное меню
             canvas.addEventListener('contextmenu', (e) => e.preventDefault());
             
-            // Обработка отпускания кнопки на мобильном
-            jumpBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                jump();
-            });
-            
-            jumpBtn.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                jumpBtn.style.transform = 'scale(1)';
-            });
-        }
-
-        function handleKeyDown(e) {
-            switch(e.code) {
-                case 'Space':
+            // Предотвращаем скролл на мобильных
+            document.addEventListener('touchmove', (e) => {
+                if (e.target === canvas || e.target === jumpBtn) {
                     e.preventDefault();
-                    jump();
-                    break;
-                case 'ArrowUp':
-                    e.preventDefault();
-                    jump();
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    duck(true);
-                    break;
-            }
-        }
-
-        function handleKeyUp(e) {
-            if (e.code === 'ArrowDown') {
-                duck(false);
-            }
+                }
+            }, { passive: false });
         }
 
         // ========== ИГРОВОЙ ЦИКЛ ==========
-        function gameLoop(currentTime = 0) {
-            update(currentTime);
+        function gameLoop(timestamp) {
+            update();
             draw();
             gameLoopId = requestAnimationFrame(gameLoop);
         }
 
-        // ========== ЗАПУСК ИГРЫ ==========
-        // Ждем загрузки изображений
-        let imagesLoaded = 0;
-        const totalImages = 2;
-        
-        function checkAllImagesLoaded() {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) {
-                setTimeout(init, 100);
-            }
-        }
-        
-        playerImg.onload = checkAllImagesLoaded;
-        cactusImg.onload = checkAllImagesLoaded;
-        playerImg.onerror = checkAllImagesLoaded;
-        
-        // Инициализация при загрузке страницы
-        window.addEventListener('load', () => {
-            if (playerImg.complete && cactusImg.complete) {
-                setTimeout(init, 100);
-            }
+        // ========== ЗАПУСК ==========
+        // Ждем полной загрузки страницы
+        window.addEventListener('load', function() {
+            setTimeout(init, 100);
         });
         
-        // Запасной таймаут
+        // Аварийный запуск
         setTimeout(() => {
             if (!gameLoopId) {
-                console.log("Принудительная инициализация...");
+                console.log("⚠️ Аварийный запуск игры...");
                 init();
             }
-        }, 3000);
+        }, 2000);
     </script>
 </body>
 </html>
